@@ -7,4 +7,5 @@
  */
 
 int main (){
+	char c='';
 }
