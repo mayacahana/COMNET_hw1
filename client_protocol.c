@@ -6,6 +6,3 @@
  *
  */
 
-int main (){
-	char c='';
-}
