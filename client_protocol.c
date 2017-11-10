@@ -6,3 +6,6 @@
  *
  */
 
+int recieve_message(){
+	//parsering the message from client
+}

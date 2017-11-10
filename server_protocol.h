@@ -12,7 +12,8 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-
+#include <netinet/in.h>
+#include <sys/socket.h>
 typedef struct user_t {
 	const char* user_name;
 	const char* password;

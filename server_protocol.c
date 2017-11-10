@@ -7,12 +7,47 @@
 
 #include "server_protocol.h"
 
-User* initUser(char* userName, char* userPass) {
-	User* newUser = (User *) malloc()
+int client_serving(int clientsocket){
+	//greeting
+	//parsing the username and password
+	//check the user
+	//message - user's files number and waiting for actions
+
 }
-void start_listen(User *usersArray) {
+void start_listen(User *usersArray, int numOfUsers, int port) {
+	int status, newsocketfd;
+	int socketfd = socket(PF_INET, SOCK_STREAM, 0);
+	struct sockaddr_in my_addr, client_addr;
+	socklen_t client_size = sizeof(client_addr);
+	if (socketfd < 0) {
+		printf("Could not create socket\n");
+		return;
+	}
 
 
+	my_addr.sin_family = AF_INET;
+	my_addr.sin_port = htons(port);
+	//my_addr.sin_addr =
+	status = bind(socketfd, &my_addr, sizeof(my_addr));
+
+	if (status < 0) {
+		printf("Could not bind ip to socket");
+		return;
+	}
+
+	if(listen(socketfd, 1) < 0 ){
+		printf("Could not listen...");
+		return;
+	}
+	while (1) {
+		newsocketfd = accept(socketfd, &client_addr, &client_size);
+		if (newsocketfd < 0){
+			printf("accept() not successful...");
+			return;
+		}
+		client_serving(newsocketfd);
+		close(newsocketfd);
+	}
 }
 void start_server(char* users_file, const char* dir_path, int port) {
 	//creating the main folder
