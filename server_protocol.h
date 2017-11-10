@@ -8,6 +8,15 @@
 #ifndef SERVER_PROTOCOL_H_
 #define SERVER_PROTOCOL_H_
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
+typedef struct user_t {
+	const char* user_name;
+	const char* password;
+	const char* dir_path;
+} User;
 
 #endif /* SERVER_PROTOCOL_H_ */
