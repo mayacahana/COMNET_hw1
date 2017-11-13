@@ -8,12 +8,11 @@
 #include "server_protocol.h"
 
 int client_serving(int clientsocket){
-	//greeting
-	//parsing the username and password
-	//check the user
-	//message - user's files number and waiting for actions
+
 
 }
+
+
 void start_listen(User *usersArray, int numOfUsers, int port) {
 	int status, newsocketfd;
 	int socketfd = socket(PF_INET, SOCK_STREAM, 0);
