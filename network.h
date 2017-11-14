@@ -52,5 +52,23 @@ typedef struct {
 	message_command;
 	char command_data[MAX_DATA_SIZE]
 };*/
+
+typedef enum messageType{
+	LOGIN_DETAILS,
+	LIST_OF_FILES,
+	DELETE_FILE,
+	ADD_FILE,
+	GET_FILE,
+	QUIT
+}MessageType;
+
+typedef struct Message_t{
+	MessageType type;
+	char* arg1;
+	char* arg2;
+	int fromClient;//1 - from client, 0 - from server
+};
+
+
 #endif  NETWORK_H_
 
