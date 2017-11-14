@@ -26,13 +26,20 @@ void getNameAndFiles(User* user){
         }
         closedir(d);
     }
-    printf("Hi %s, you have %d files stored", user->user_name, numOfFiles);
+    printf("Hi %s, you have %d files stored.\n", user->user_name, numOfFiles);
     return;
 }
 
+/*
+ * welcome the accepted socket, get username and password and checks if it fits
+ * any user name in the users list *users. if not, allows client to quit or retype,
+ * else, calls getNameAndFiles to greet the user.
+ *
+ */
+
 
 int client_serving(int clientsocket, User *users, int numOfUsers){
-	printf("Welcome! Please log in\n");
+	printf("Welcome! Please log in.\n");
 	User* user = NULL;
 	int flag = 1;
 	char* username = (char*) malloc (sizeof(char)*(strlen("User: ")+ MAX_USERNAME_SIZE));
