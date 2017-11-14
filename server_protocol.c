@@ -28,7 +28,7 @@ void getNameAndFiles(User* user){
 
 
 int client_serving(int clientsocket, User *users, int numOfUsers){
-	printf("Welcome! Please log in\n");
+	printf("Welcome! Please log in.\n");
 	User* user = NULL;
 	int flag = 1;
 
