@@ -7,6 +7,10 @@
 
 #ifndef CLIENT_PROTOCOL_H_
 #define CLIENT_PROTOCOL_H_
+#include "network.h"
+
+#include <stdio.h>
+
 
 
 
