@@ -27,32 +27,7 @@
 #define MAX_COMMAND_NAME 13
 
 
-/*
-#include "network.h"
-#include <arpa/inet.h>
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include "server_protocol.h"
-//
-//#pragma pack(push, 1)
-//typedef struct
-//{
-//	short opcode;
-//	short length;
-//}message_header;
-//
-//typedef struct
-//{
-//	message_header header;
-//	char data[MAX_DATA_SIZE];
-//}message;
-//#pragma pack(pop)
 
-typedef struct {
-	message_command;
-	char command_data[MAX_DATA_SIZE]
-};*/
 
 typedef enum messageType{
 	LOGIN_DETAILS,
@@ -61,15 +36,21 @@ typedef enum messageType{
 	ADD_FILE,
 	GET_FILE,
 	QUIT
-}MessageType;
+} MessageType;
 
 typedef struct Message_t{
 	MessageType type;
 	char* arg1;
 	char* arg2;
 	int fromClient;//1 - from client, 0 - from server
+<<<<<<< HEAD
 }Message;
+=======
+} Message;
+>>>>>>> branch 'master' of https://github.com/mayacahana/COMNET_hw1.git
 
+int send_command(int sckt, Message msg_to_sent);
 
+int receieve_command(int sckt, Message msg_recieved);
 #endif  NETWORK_H_
 
