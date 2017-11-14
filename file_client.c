@@ -21,7 +21,6 @@
 int main(int argc, char* argv[]) {
 	const char* hostname = DEFAULT_HOSTNAME;
 	int port = DEFAULT_PORT;
-	struct stat directory;
 	if (argc > 3) {
 		printf("Invalid arguments. usage: [[hostname][port]]");
 		return 1;
