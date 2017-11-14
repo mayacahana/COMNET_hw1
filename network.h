@@ -15,6 +15,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <dirent.h>
+#include <string.h>
 
 #define MAX_USERNAME_SIZE 25
 #define MAX_PASSWORD_SIZE 25
@@ -67,7 +68,7 @@ typedef struct Message_t{
 	char* arg1;
 	char* arg2;
 	int fromClient;//1 - from client, 0 - from server
-};
+}Message;
 
 
 #endif  NETWORK_H_
