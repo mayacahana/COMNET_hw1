@@ -11,7 +11,7 @@
 
 
 char* getUserDetails(){
-	char* userDetails[40];
+	char* userDetails[];
 	int read = getline(&userDetails, 40, stdin);
 	if (read != -1){
 		puts(userDetails);
@@ -163,11 +163,10 @@ int startClient(char* hostname, int port){
 
 	connect(socketfd, (struct sockaddr*) &dest_addr, sizeof(struct sockaddr));
 
-
-	int status = 0;
 	status = defineUser();
 	while (status == 0){
 
+		status = sendCommand()
 
 
 	}
