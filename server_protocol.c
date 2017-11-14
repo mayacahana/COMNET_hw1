@@ -31,6 +31,8 @@ int client_serving(int clientsocket, User *users, int numOfUsers){
 	printf("Welcome! Please log in\n");
 	User* user = NULL;
 	int flag = 1;
+
+	//the client is supposed to send in this format;
 	char* username = (char*) malloc (sizeof(char)*(strlen("User: ")+ MAX_USERNAME_SIZE));
 	char* password = (char*) malloc (sizeof(char)*(strlen("Password: ") + MAX_PASSWORD_SIZE));
 	while (user == NULL || flag){
@@ -81,7 +83,6 @@ void start_listen(User *usersArray, int numOfUsers, int port) {
 	}
 
 
-	my_addr.sin_family = AF_INET;
 	my_addr.sin_port = htons(port);
 	//my_addr.sin_addr =
 	status = bind(socketfd, &my_addr, sizeof(my_addr));
