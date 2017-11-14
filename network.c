@@ -5,8 +5,8 @@
  *      Author: mayacahana
  */
 
-int send_command(int sckt, char* message) {
-	message message_recieved = parseMessage(message);
+int send_command(int sckt, Message message) {
+
 
 }
 
