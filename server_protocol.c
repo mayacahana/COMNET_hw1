@@ -7,10 +7,67 @@
 
 #include "server_protocol.h"
 
-int client_serving(int clientsocket){
 
-
+void getNameAndFiles(User* user){
+	if (!user){
+		return;
+	}
+	int numOfFiles = 0;
+    DIR *d;
+    struct dirent *dir;
+    d = opendir(user->dir_path);
+    if (d){
+        while ((dir = readdir(d)) != NULL){
+        	numOfFiles++;
+        }
+        closedir(d);
+    }
+    printf("Hi %s, you have %d files stored", user->user_name, numOfFiles);
+    return;
 }
+
+
+int client_serving(int clientsocket, User *users, int numOfUsers){
+	printf("Welcome! Please log in\n");
+	User* user = NULL;
+	int flag = 1;
+	char* username = (char*) malloc (sizeof(char)*(strlen("User: ")+ MAX_USERNAME_SIZE));
+	char* password = (char*) malloc (sizeof(char)*(strlen("Password: ") + MAX_PASSWORD_SIZE));
+	while (user == NULL || flag){
+		scanf("%s", &username);
+		scanf("%s", &password);
+		if (strcmp(username, "quit")==0){
+			flag = 0;
+		}
+		else{
+			username = username + strlen("User: ");
+			password = password + strlen("Password: ");
+			for (int i = 0 ; i< numOfUsers; i++){
+				if (strcmp(users[i]->user_name, username)==0){
+					if (strcmp(users[i]->password,password)==0){
+						user = users[i];
+						getNameAndFiles(user);
+					}
+				}
+			}
+			if (user == NULL){
+				printf("Wrong user name or password, please try again or quit\n");
+			}
+		}
+		username = username - 5;
+		password = password - 9;
+	}
+	free(username);
+	free(password);
+	char* comStr = (char*) malloc(sizeof(char*)*(MAX_COMMAND_NAME+MAX_FILE_NAME+MAX_PATH_NAME+3));
+	while(flag){
+		scanf("%s", &comStr);
+		flag = parseAndDoCommand(comStr);
+	}
+	free(comStr);
+	return 0;
+}
+
 
 
 void start_listen(User *usersArray, int numOfUsers, int port) {
@@ -48,6 +105,8 @@ void start_listen(User *usersArray, int numOfUsers, int port) {
 		close(newsocketfd);
 	}
 }
+
+
 void start_server(char* users_file, const char* dir_path, int port) {
 	//creating the main folder
 	//reading input file
