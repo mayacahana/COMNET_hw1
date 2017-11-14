@@ -84,7 +84,7 @@ void start_listen(User *usersArray, int numOfUsers, int port) {
 
 
 	my_addr.sin_port = htons(port);
-	//my_addr.sin_addr =
+	//TODO:my_addr.sin_addr = ask jhonatan!!!!!!
 	status = bind(socketfd, &my_addr, sizeof(my_addr));
 
 	if (status < 0) {
