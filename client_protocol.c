@@ -10,17 +10,6 @@
 #include server_protocol // remove this after bridge fixed
 
 
-typedef enum {
-	UNDEFINED,
-	LIST_OF_FILES,
-	DELETE_FILE,
-	ADD_FILE,
-	GET_FILE,
-	QUIT,
-} command;
-
-
-
 char* getUserDetails(){
 	char* userDetails[26];
 	int read = getline(&userDetails, 25, stdin);
@@ -30,7 +19,6 @@ char* getUserDetails(){
 	}
 	printf("No Line Read");
 	return NULL;
-	}
 }
 
 
@@ -55,7 +43,7 @@ int createUser(){
 	char* userPassword = getUserPassword();
 	char* userMessagae[36] = "Password: ";
 	strcat(userMessage, userPassword);
-	status = send_message(userMessage); // chage this if needed
+	status = send_message(userMessage); // change this if needed
 	if (status != 0){
 		printf("Message Not Sent");
 		return 1;
@@ -63,13 +51,19 @@ int createUser(){
 	return 0;
 }
 
+//??
 int sendCommand(char* commandStr){
 	int status = 0;
 	while (status == 0){
-		switch(command){
+
 
 		}
 	}
+	return 0;
+}
+
+
+
 
 
 
