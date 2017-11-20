@@ -17,7 +17,7 @@ char* getUserDetails() {
 		return userDetails;
 	}
 	printf("No Line Read");
-	return NULL ;
+	return NULL;
 }
 /*
  * @param pointer to string and size_t variable n
@@ -39,6 +39,7 @@ int defineUser(int serverSocket) {
 	Message* m = (Message*) malloc(sizeof(Message));
 	int status = 0;
 	//get username and password
+<<<<<<< HEAD
 	while (status) {
 		char* fullPassword;
 		char* fullUsername = getUserDetails();
@@ -84,14 +85,49 @@ int defineUser(int serverSocket) {
 			status = 1;
 		}
 	}	//while
+=======
+	char* fullUsername = getUserDetails();
+	char* fullPassword = getUserDetails();
+	if (fullUsername == NULL || fullPassword == NULL) {
+		return 1;
+	}
+	char* userPrefix[7];
+	char* passwordPrefix[11];
+	strcpy(userPrefix, fullUsername);
+	strcpy(passwordPrefix, fullPassword);
+	userPrefix[7] = '\0'; // "User: " if in correct format
+	passwordPrefix[11] = '\0'; // "Password: " if in correct format
+	//check if input is in correct format and create message
+	if ((strcmp(userPrefix, "User: ") == 0)
+			&& (strcmp(passwordPrefix, "Password: ") == 0)) {
+		char* username[26], password[26];
+		username = chopN(fullUsername, 6);
+		password = chopN(fullPassword, 10);
+		m->type = LOGIN_DETAILS;
+		m->arg1 = username;
+		m->arg2 = password;
+		m->fromClient = 1;
+		status = send_command(m, sockfd);
+
+		receive_command(serverSocket, m);
+		if (strcmp(m->arg1, "Wrong") == 0) {
+			printf("Wrong username or passoword. Please try again. \n");
+		} else
+			printf("%s\n", m->arg1);
+
+	} else {
+		printf("wrong format");	// fix this
+		status = 1;
+	}
+>>>>>>> refs/remotes/origin/master
 	free(m);
 	return status;
 }
 
 Message* createMessage(char* commandStr, MessageType type, char* prefix) {
 	Message* m = (Message*) malloc(sizeof(Message));
-	if (m == NULL )
-		return NULL ;
+	if (m == NULL)
+		return NULL;
 	m->type = type;
 	m->fromClient = 1;
 	m->arg1 = prefix;
@@ -107,9 +143,16 @@ int sendClientCommand(char* commandStr, int serverSocket, int mySocketfd) {
 	inputPrefix[14] = "\0";
 	if (strcmp(inputPrefix, "list_of_files") == 0) {
 		Message* m = createMessage(commandStr, LIST_OF_FILES, inputPrefix);
+<<<<<<< HEAD
 		if (!m) {
 			printf("error in creating message\n"); //DELETE THIS BEFORE HANDING IN
 			return 1;
+=======
+		if (m != NULL) {
+			status = send_command(serverSocket, m);
+
+			return status;
+>>>>>>> refs/remotes/origin/master
 		}
 		status = send_command(serverSocket, m);
 		if (status != 0) {
@@ -126,9 +169,15 @@ int sendClientCommand(char* commandStr, int serverSocket, int mySocketfd) {
 	inputPrefix[11] = "\0";
 	if (strcmp(inputPrefix, "delete_file") == 0) {
 		Message* m = createMessage(commandStr, DELETE_FILE, inputPrefix);
+<<<<<<< HEAD
 		if (!m) {
 			printf("error in creating message\n"); //DELETE THIS BEFORE HANDING IN
 			return 1;
+=======
+		if (m != NULL) {
+			status = send_command(serverSocket, m);
+			return status;
+>>>>>>> refs/remotes/origin/master
 		}
 		status = send_command(serverSocket, m);
 		if (status != 0) {
@@ -150,9 +199,11 @@ int sendClientCommand(char* commandStr, int serverSocket, int mySocketfd) {
 			return 1;
 		}
 
-
-		//char* buffer = ;
-
+		char* buffer = addFileClientSide(m->arg1) ;
+		if (buffer == NULL)
+			return 0;
+		strcpy(m->arg1, m->arg2);
+		m->arg2 = buffer;
 		status = send_command(serverSocket, m);
 		if (status != 0) {
 			printf("error, re-send message\n")
@@ -168,11 +219,17 @@ int sendClientCommand(char* commandStr, int serverSocket, int mySocketfd) {
 	}
 	if (strcmp(inputPrefix, "get_file") == 0) {
 		Message* m = createMessage(commandStr, GET_FILE, inputPrefix);
+<<<<<<< HEAD
 		char* path_to_save = (char*)malloc(strlen(m->arg2));
 		strcpy(path_to_save, m->arg2);
 		if (!m) {
 			printf("error in creating message\n"); //DELETE THIS BEFORE HANDING IN
 			return 1;
+=======
+		if (m != NULL) {
+			status = send_command(serverSocket, m);
+			return status;
+>>>>>>> refs/remotes/origin/master
 		}
 		status = send_command(serverSocket, m);
 		if (status != 0) {
@@ -202,7 +259,14 @@ int sendClientCommand(char* commandStr, int serverSocket, int mySocketfd) {
 char* addFileClientSide(char* filePath){
 	FILE* fp = fopen(filePath, "r");
 	char* buffer = (char*)malloc(MAX_FILE_SIZE);
-	sprintf(filePath, sizeof())
+	if (!buffer)
+	{
+		printf("malloc error\n");
+		return NULL;
+	}
+	fread(buffer, MAX_FILE_SIZE, 1, fp);
+	fclose(fp);
+	return buffer;
 }
 
 
@@ -221,6 +285,10 @@ void getFileClientSide(char* filePath, char* fileBuffer) {
 
 int  client_start(char* hostname, int port) {
 	if (hostname == NULL ) {
+=======
+int start_client(char* hostname, int port) {
+	if (hostname == NULL) {
+>>>>>>> refs/remotes/origin/master
 		hostname[10] = "localhost";
 		port = 2235;
 	} else if (port == 0)
@@ -241,10 +309,15 @@ int  client_start(char* hostname, int port) {
 
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(port);
-	server_addr.sin_addr = htonl(hostname); // to do??
+	server_addr.sin_addr = htonl(hostname);
 
+<<<<<<< HEAD
 	int connect = connect(socketfd, &server_addr, sizeof(struct server_addr));
 	if (connect < 0) {
+=======
+	int clientSocket = connect(socketfd, &server_addr, sizeof(struct server_addr));
+	if (clientSocket < 0) {
+>>>>>>> refs/remotes/origin/master
 		close(socketfd);
 		printf("connection failed");
 		return 1;
@@ -257,8 +330,13 @@ int  client_start(char* hostname, int port) {
 		size_t n = 0;
 		int read = getline(&inputStr, n, stdin);
 		if (read != -1) {
+<<<<<<< HEAD
 			//puts(inputStr);
 			status = sendClientCommand(inputStr, dest_addr);
+=======
+			puts(inputStr);
+			status = sendClientCommand(inputStr, socketfd, clientSocket);
+>>>>>>> refs/remotes/origin/master
 
 		} else
 			status = 1;

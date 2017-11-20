@@ -70,19 +70,19 @@ void sendListOfFiles(int clientSocket, User* user) {
 	if (!user) {
 		return;
 	}
-	char names[MAX_FILES_PER_CLIENT][MAX_FILE_NAME];
+	char files_names[MAX_FILES_PER_CLIENT * MAX_FILE_NAME];
+	char file_name[MAX_FILE_NAME];
 	DIR *d;
 	struct dirent *dir;
-	int i = 0;
 	d = opendir(user->dir_path);
-	if (d) {
+	if (d != NULL) {
 		while ((dir = readdir(d)) != NULL) {
-			names[i] = dir->d_name;
-			i++;
+			sprintf(file_name, dir->d_name);
+			sprintf(files_names + len(files_names), '%s\n',file_name);
 		}
 		closedir(d);
 	}
-	Message* msg = createServerMessage(LIST_OF_FILES, names, NULL);
+	Message* msg = createServerMessage(LIST_OF_FILES, files_names, NULL);
 	send_command(clientSocket, msg);
 	free(msg);
 	return;
@@ -94,7 +94,7 @@ void sendFileToClient(int clientSocket, Message* msg, User* user) {
 	int file_size;
 	char * username = user->user_name;
 	FILE* fp;
-	char pathToFile[sizeof(user->dir_path) + sizeof(msg->arg1) + 1];
+	char pathToFile[strlen(user->dir_path) + strlen(msg->arg1) + 1];
 	sprintf(pathToFile, sizeof(pathToFile), "%s/%s/%s", user->dir_path,
 			user->user_name, msg->arg1);
 	fp = fopen(pathToFile, "rb");
@@ -169,7 +169,6 @@ void getNameAndFiles(int clientSocket, User* user) {
  */
 
 int client_serving(int clientSocket, User *users, int numOfUsers) {
-	printf("Welcome! Please log in.\n");
 	User* user = NULL;
 	int flag = 1;
 	Message *msg = (Message *) malloc(sizeof(Message) + 1);
@@ -184,7 +183,11 @@ int client_serving(int clientSocket, User *users, int numOfUsers) {
 			}
 		}
 		if (user == NULL) {
-			printf("Wrong user name or password, please try again or quit\n");
+			char* command = "WRONG";
+			msg->arg1 = command;
+			msg
+			send_command( clientSocket)
+
 		}
 	}
 	while (msg.type != QUIT) {
@@ -256,8 +259,10 @@ void start_server(char* users_file, const char* dir_path, int port) {
 			free(user_buffer);
 			free(pass_buffer);
 			free(fileDirPath);
-			user_buffer = (char*) malloc(sizeof(char*) * MAX_USERNAME_SIZE +1 +strlen("User :"));
-			pass_buffer = (char*) malloc(sizeof(char*) * MAX_PASSWORD_SIZE + 1 + strlen("Password"));
+			user_buffer = (char*) malloc(
+					sizeof(char*) * MAX_USERNAME_SIZE + 1 + strlen("User :"));
+			pass_buffer = (char*) malloc(
+					sizeof(char*) * MAX_PASSWORD_SIZE + 1 + strlen("Password"));
 		}
 		start_listen(usersArray);
 	}
