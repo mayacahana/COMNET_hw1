@@ -9,8 +9,9 @@
 #include "client_protocol.h"
 
 char* getUserDetails() {
-	char* userDetails[MAX_USERNAME_SIZE];
-	int read = getline(&userDetails, 40, stdin);
+	char* userDetails= NULL;
+	size_t* n = 0;
+	int read = getline(&userDetails, &n, stdin);
 	if (read != -1) {
 		puts(userDetails);
 		return userDetails;
@@ -47,8 +48,8 @@ int defineUser(int serverSocket) {
 	char* passwordPrefix[11];
 	strncpy(userPrefix, fullUsername);
 	strncpy(passwordPrefix, fullPassword);
-	userPrefix[7] = "\0"; // "User: " if in correct format
-	passwordPrefix[11] = "\0"; // "Password: " if in correct format
+	userPrefix[7] = '\0'; // "User: " if in correct format
+	passwordPrefix[11] = '\0'; // "Password: " if in correct format
 	//check if input is in correct format and create message
 	if ((strcmp(userPrefix, "User: ") == 0)
 			&& (strcmp(passwordPrefix, "Password: ") == 0)) {
