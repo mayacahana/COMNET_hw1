@@ -59,15 +59,12 @@ int defineUser() {
 		m->arg1 = username;
 		m->arg2 = password;
 		m->fromClient = 1;
-		status = send_message(m);
+		status = send_command(,m);
 	} else {
 		printf("wrong format");	// fix this
 		status = 1;
 	}
-	free(fullUsername);
-	free(fullPassword);
-	free(userPrefix);
-	free(passwordPrefix);
+	free(m);
 	return status;
 }
 
@@ -83,7 +80,7 @@ Message* createMessage(char* commandStr, MessageType type, char* prefix) {
 	return m;
 }
 
-int sendCommand(char* commandStr) {
+int sendClientCommand(char* commandStr, int serverSocket, int mySocketfd) {
 	int status = 0;
 	char* inputPrefix[14];
 	strncpy(inputPrefix, commandStr);
@@ -91,7 +88,7 @@ int sendCommand(char* commandStr) {
 	if (strcmp(inputPrefix, "list_of_files") == 0) {
 		Message* m = createMessage(commandStr, LIST_OF_FILES, inputPrefix);
 		if (m != NULL ) {
-			status = send_message(m);
+			status = send_command(serverSocket, m);
 			return status;
 		}
 		printf("message not created");
@@ -101,7 +98,7 @@ int sendCommand(char* commandStr) {
 	if (strcmp(inputPrefix, "delete_file") == 0) {
 		Message* m = createMessage(commandStr, DELETE_FILE, inputPrefix);
 		if (m != NULL ) {
-			status = send_message(m);
+			status = send_command(serverSocket, m);
 			return status;
 		}
 		printf("message not created");
@@ -111,7 +108,7 @@ int sendCommand(char* commandStr) {
 	if (strcmp(inputPrefix, "add_file") == 0) {
 		Message* m = createMessage(commandStr, ADD_FILE, inputPrefix);
 		if (m != NULL ) {
-			status = send_message(m);
+			status = send_command(serverSocket, m);
 			return status;
 		}
 		printf("message not created");
@@ -120,7 +117,7 @@ int sendCommand(char* commandStr) {
 	if (strcmp(inputPrefix, "get_file") == 0) {
 		Message* m = createMessage(commandStr, GET_FILE, inputPrefix);
 		if (m != NULL ) {
-			status = send_message(m);
+			status = send_command(serverSocket, m);
 			return status;
 		}
 		printf("message not created");
@@ -128,15 +125,13 @@ int sendCommand(char* commandStr) {
 	}
 	inputPrefix[4] = "\0";
 	if (strcmp(inputPrefix, "quit") == 0) {
-		Message* m = createMessage(commandStr, QUIT, inputPrefix);
-		if (m != NULL ) {
-			status = send_message(m);
-			return status;
+		if (close(mySocketfd) == -1)
+		{
+			printf("close() failed: %s\n", strerror(errno));
+			return 1;
 		}
-		printf("message not created");
-		return 1;
-	} else
-		printf("wrong command format");
+	}
+
 	return 1;
 }
 
@@ -156,14 +151,13 @@ void startClient(char* hostname, int port) {
 		return;
 	}
 
-	struct sockaddr_in my_addr;
-	struct server_addr;
+	struct sockaddr_in my_addr, server_addr;
 
 	socklen_t server_size = sizeof(server_addr);
 
 	dest_addr.sin_family = AF_INET;
 	dest_addr.sin_port = htons(port);
-	//dest_addr.sin_addr = htonl(0x8443FC64); // to do
+	dest_addr.sin_addr = INADDR_LOOPBACK; // to do??
 
 	int connect;
 	connect = connect(socketfd, (struct sockaddr*)&server_addr, sizeof(struct server_addr));
@@ -173,16 +167,25 @@ void startClient(char* hostname, int port) {
 		return;
 	}
 	status = defineUser();
+
 	while (status == 0) {
 		int maxLen = MAX_COMMAND_NAME + MAX_PATH_NAME + MAX_FILE_NAME;
 		char* inputStr[maxLen];
 		int read = getline(&inputStr, maxLen, stdin);
 		if (read != -1) {
 			puts(inputStr);
-			status = sendCommand(inputStr);
+			status = sendClientCommand(inputStr, dest_addr);
 		} else
 			status = 1;
 	}
-	return;
+
+	if (close(sockfd) == -1)
+	{
+		printf("close() failed: %s\n", strerror(errno));
+		return 1;
+	}
+
+
+	return status;
 }
 
