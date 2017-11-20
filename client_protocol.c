@@ -9,8 +9,9 @@
 #include "client_protocol.h"
 
 char* getUserDetails() {
-	char* userDetails[MAX_USERNAME_SIZE];
-	int read = getline(&userDetails, 40, stdin);
+	char* userDetails= NULL;
+	size_t* n = 0;
+	int read = getline(&userDetails, &n, stdin);
 	if (read != -1) {
 		puts(userDetails);
 		return userDetails;
