@@ -16,7 +16,7 @@ char* getUserDetails() {
 		return userDetails;
 	}
 	printf("No Line Read");
-	return NULL ;
+	return NULL;
 }
 /*
  * @param pointer to string and size_t variable n
@@ -40,7 +40,7 @@ int defineUser(int serverSocket) {
 	//get username and password
 	char* fullUsername = getUserDetails();
 	char* fullPassword = getUserDetails();
-	if (fullUsername == NULL || fullPassword == NULL ) {
+	if (fullUsername == NULL || fullPassword == NULL) {
 		return 1;
 	}
 	char* userPrefix[7];
@@ -61,12 +61,10 @@ int defineUser(int serverSocket) {
 		m->fromClient = 1;
 		status = send_command(m, sockfd);
 
-
 		receive_command(serverSocket, m);
-		if (strcmp(m->arg1, "Wrong")==0){
+		if (strcmp(m->arg1, "Wrong") == 0) {
 			printf("Wrong username or passoword. Please try again. \n");
-		}
-		else
+		} else
 			printf("%s\n", m->arg1);
 
 	} else {
@@ -79,8 +77,8 @@ int defineUser(int serverSocket) {
 
 Message* createMessage(char* commandStr, MessageType type, char* prefix) {
 	Message* m = (Message*) malloc(sizeof(Message));
-	if (m == NULL )
-		return NULL ;
+	if (m == NULL)
+		return NULL;
 	m->type = type;
 	m->fromClient = 1;
 	m->arg1 = prefix;
@@ -96,7 +94,7 @@ int sendClientCommand(char* commandStr, int serverSocket, int mySocketfd) {
 	inputPrefix[14] = "\0";
 	if (strcmp(inputPrefix, "list_of_files") == 0) {
 		Message* m = createMessage(commandStr, LIST_OF_FILES, inputPrefix);
-		if (m != NULL ) {
+		if (m != NULL) {
 			status = send_command(serverSocket, m);
 
 			return status;
@@ -107,7 +105,7 @@ int sendClientCommand(char* commandStr, int serverSocket, int mySocketfd) {
 	inputPrefix[11] = "\0";
 	if (strcmp(inputPrefix, "delete_file") == 0) {
 		Message* m = createMessage(commandStr, DELETE_FILE, inputPrefix);
-		if (m != NULL ) {
+		if (m != NULL) {
 			status = send_command(serverSocket, m);
 			return status;
 		}
@@ -117,7 +115,7 @@ int sendClientCommand(char* commandStr, int serverSocket, int mySocketfd) {
 	inputPrefix[8] = "\0";
 	if (strcmp(inputPrefix, "add_file") == 0) {
 		Message* m = createMessage(commandStr, ADD_FILE, inputPrefix);
-		if (m != NULL ) {
+		if (m != NULL) {
 			status = send_command(serverSocket, m);
 			return status;
 		}
@@ -126,7 +124,7 @@ int sendClientCommand(char* commandStr, int serverSocket, int mySocketfd) {
 	}
 	if (strcmp(inputPrefix, "get_file") == 0) {
 		Message* m = createMessage(commandStr, GET_FILE, inputPrefix);
-		if (m != NULL ) {
+		if (m != NULL) {
 			status = send_command(serverSocket, m);
 			return status;
 		}
@@ -135,8 +133,7 @@ int sendClientCommand(char* commandStr, int serverSocket, int mySocketfd) {
 	}
 	inputPrefix[4] = "\0";
 	if (strcmp(inputPrefix, "quit") == 0) {
-		if (close(mySocketfd) == -1)
-		{
+		if (close(mySocketfd) == -1) {
 			printf("close() failed: %s\n", strerror(errno));
 			return 1;
 		}
@@ -145,8 +142,8 @@ int sendClientCommand(char* commandStr, int serverSocket, int mySocketfd) {
 	return 1;
 }
 
-int client_start(char* hostname, int port) {
-	if (hostname == NULL ) {
+int start_client(char* hostname, int port) {
+	if (hostname == NULL) {
 		hostname[10] = "localhost";
 		port = 2235;
 	} else if (port == 0)
@@ -167,10 +164,10 @@ int client_start(char* hostname, int port) {
 
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(port);
-	server_addr.sin_addr = htonl(hostname); // to do??
+	server_addr.sin_addr = htonl(hostname);
 
-	int connect = connect(socketfd, &server_addr, sizeof(struct server_addr));
-	if (connect < 0){
+	int clientSocket = connect(socketfd, &server_addr, sizeof(struct server_addr));
+	if (clientSocket < 0) {
 		close(socketfd);
 		printf("connection failed");
 		return 1;
@@ -183,18 +180,16 @@ int client_start(char* hostname, int port) {
 		int read = getline(&inputStr, maxLen, stdin);
 		if (read != -1) {
 			puts(inputStr);
-			status = sendClientCommand(inputStr, dest_addr);
+			status = sendClientCommand(inputStr, socketfd, clientSocket);
 
 		} else
 			status = 1;
 	}
 
-	if (close(socketfd) == -1)
-	{
+	if (close(socketfd) == -1) {
 		printf("close() failed\n");
 		return 1;
 	}
-
 
 	return status;
 }
