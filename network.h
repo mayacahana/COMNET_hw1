@@ -43,6 +43,8 @@ typedef struct Message_t{
 	char* arg1;
 	char* arg2;
 	int fromClient;//1 - from client, 0 - from server
+} Message;
+
 
 
 int send_command(int sckt, Message msg_to_sent);

@@ -34,7 +34,7 @@ void chopN(char *str, size_t n) {
  * sends server username and password
  * returns 0 if succeeds, otherwise returns 1
  */
-int defineUser() {
+int defineUser(int serverSocket) {
 	Message* m = (Message*) malloc(sizeof(Message));
 	int status = 0;
 	//get username and password
@@ -59,7 +59,16 @@ int defineUser() {
 		m->arg1 = username;
 		m->arg2 = password;
 		m->fromClient = 1;
-		status = send_command(,m);
+		status = send_command(m, sockfd);
+
+
+		receive_command(serverSocket, m);
+		if (strcmp(m->arg1, "Wrong")==0){
+			printf("Wrong username or passoword. Please try again. \n");
+		}
+		else
+			printf("%s\n", m->arg1);
+
 	} else {
 		printf("wrong format");	// fix this
 		status = 1;
@@ -82,13 +91,14 @@ Message* createMessage(char* commandStr, MessageType type, char* prefix) {
 
 int sendClientCommand(char* commandStr, int serverSocket, int mySocketfd) {
 	int status = 0;
-	char* inputPrefix[14];
-	strncpy(inputPrefix, commandStr);
+	char* inputPrefix[15];
+	strncpy(inputPrefix, commandStr, 14);
 	inputPrefix[14] = "\0";
 	if (strcmp(inputPrefix, "list_of_files") == 0) {
 		Message* m = createMessage(commandStr, LIST_OF_FILES, inputPrefix);
 		if (m != NULL ) {
 			status = send_command(serverSocket, m);
+
 			return status;
 		}
 		printf("message not created");
@@ -135,7 +145,7 @@ int sendClientCommand(char* commandStr, int serverSocket, int mySocketfd) {
 	return 1;
 }
 
-void startClient(char* hostname, int port) {
+int client_start(char* hostname, int port) {
 	if (hostname == NULL ) {
 		hostname[10] = "localhost";
 		port = 2235;
@@ -148,23 +158,22 @@ void startClient(char* hostname, int port) {
 
 	if (socketfd < 0) {
 		printf("Could not create socket\n");
-		return;
+		return 1;
 	}
 
 	struct sockaddr_in my_addr, server_addr;
 
 	socklen_t server_size = sizeof(server_addr);
 
-	dest_addr.sin_family = AF_INET;
-	dest_addr.sin_port = htons(port);
-	dest_addr.sin_addr = INADDR_LOOPBACK; // to do??
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons(port);
+	server_addr.sin_addr = htonl(hostname); // to do??
 
-	int connect;
-	connect = connect(socketfd, (struct sockaddr*)&server_addr, sizeof(struct server_addr));
+	int connect = connect(socketfd, &server_addr, sizeof(struct server_addr));
 	if (connect < 0){
 		close(socketfd);
 		printf("connection failed");
-		return;
+		return 1;
 	}
 	status = defineUser();
 
@@ -175,13 +184,14 @@ void startClient(char* hostname, int port) {
 		if (read != -1) {
 			puts(inputStr);
 			status = sendClientCommand(inputStr, dest_addr);
+
 		} else
 			status = 1;
 	}
 
-	if (close(sockfd) == -1)
+	if (close(socketfd) == -1)
 	{
-		printf("close() failed: %s\n", strerror(errno));
+		printf("close() failed\n");
 		return 1;
 	}
 
