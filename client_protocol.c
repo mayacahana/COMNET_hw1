@@ -202,6 +202,7 @@ int sendClientCommand(char* commandStr, int serverSocket, int mySocketfd) {
 char* addFileClientSide(char* filePath){
 	FILE* fp = fopen(filePath, "r");
 	char* buffer = (char*)malloc(MAX_FILE_SIZE);
+	sprintf(filePath, sizeof())
 }
 
 
