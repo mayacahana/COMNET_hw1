@@ -16,7 +16,7 @@ Message* createServerMessage(MessageType type, char* arg1, char* arg2) {
 	return msg;
 }
 
-void addFile(Message* msg, User* user) {
+void addFile(int clientSocket, Message* msg, User* user) {
 	if (!user || !msg) {
 		printf("Error in Message or User");
 		return;
@@ -30,6 +30,7 @@ void addFile(Message* msg, User* user) {
 	if (file == NULL) {
 		printf("File Not Added\n");
 		msgToSend = createServerMessage(msg->type, "ERROR", NULL);
+		send_command(clientSocket, msgToSend);
 		free(msgToSend);
 		free(pathToFile);
 		return;
@@ -37,13 +38,13 @@ void addFile(Message* msg, User* user) {
 	fwrite(msg->arg2, sizeof(char), MAX_FILE_SIZE, file);
 	fclose(file);
 	msg = createServerMessage(msg->type, "File added", NULL);
-	/// send//
+	send_command(clientSocket, msg);
 	free(msg);
 	free(pathToFile);
 
 }
 
-void deleteFile(Message* msg, User* user) {
+void deleteFile(int clientSocket, Message* msg, User* user) {
 	if (!user || !msg) {
 		printf("Error in Message or User");
 		return;
@@ -60,12 +61,12 @@ void deleteFile(Message* msg, User* user) {
 		strcpy(arg, "No such file exists!");
 	}
 	Message* msgToSend = createServerMessage(DELETE_FILE, arg, NULL);
-	/// send msgToSend ///
+	send_command(clientSocket,msgToSend);
 	free(arg);
 	free(msgToSend);
 }
 
-void sendListOfFiles(User* user) {
+void sendListOfFiles(int clientSocket, User* user) {
 	if (!user) {
 		return;
 	}
@@ -82,8 +83,7 @@ void sendListOfFiles(User* user) {
 		closedir(d);
 	}
 	Message* msg = createServerMessage(LIST_OF_FILES, names, NULL);
-	/// send message////
-
+	send_command(clientSocket,msg);
 	free(msg);
 	return;
 }
