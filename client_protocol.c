@@ -46,8 +46,8 @@ int defineUser(int serverSocket) {
 	}
 	char* userPrefix[7];
 	char* passwordPrefix[11];
-	strncpy(userPrefix, fullUsername);
-	strncpy(passwordPrefix, fullPassword);
+	strcpy(userPrefix, fullUsername);
+	strcpy(passwordPrefix, fullPassword);
 	userPrefix[7] = '\0'; // "User: " if in correct format
 	passwordPrefix[11] = '\0'; // "Password: " if in correct format
 	//check if input is in correct format and create message
