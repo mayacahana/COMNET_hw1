@@ -16,7 +16,7 @@ Message* createServerMessage(MessageType type, char* arg1, char* arg2) {
 	return msg;
 }
 
-void addFile(Message* msg, User* user) {
+void addFile(int clientSocket, Message* msg, User* user) {
 	if (!user || !msg) {
 		printf("Error in Message or User");
 		return;
@@ -30,6 +30,7 @@ void addFile(Message* msg, User* user) {
 	if (file == NULL) {
 		printf("File Not Added\n");
 		msgToSend = createServerMessage(msg->type, "ERROR", NULL);
+		send_command(clientSocket, msgToSend);
 		free(msgToSend);
 		free(pathToFile);
 		return;
@@ -37,13 +38,13 @@ void addFile(Message* msg, User* user) {
 	fwrite(msg->arg2, sizeof(char), MAX_FILE_SIZE, file);
 	fclose(file);
 	msg = createServerMessage(msg->type, "File added", NULL);
-	/// send//
+	send_command(clientSocket, msg);
 	free(msg);
 	free(pathToFile);
 
 }
 
-void deleteFile(Message* msg, User* user) {
+void deleteFile(int clientSocket, Message* msg, User* user) {
 	if (!user || !msg) {
 		printf("Error in Message or User");
 		return;
@@ -60,12 +61,12 @@ void deleteFile(Message* msg, User* user) {
 		strcpy(arg, "No such file exists!");
 	}
 	Message* msgToSend = createServerMessage(DELETE_FILE, arg, NULL);
-	/// send msgToSend ///
+	send_command(clientSocket, msgToSend);
 	free(arg);
 	free(msgToSend);
 }
 
-void sendListOfFiles(User* user) {
+void sendListOfFiles(int clientSocket, User* user) {
 	if (!user) {
 		return;
 	}
@@ -82,8 +83,7 @@ void sendListOfFiles(User* user) {
 		closedir(d);
 	}
 	Message* msg = createServerMessage(LIST_OF_FILES, names, NULL);
-	/// send message////
-
+	send_command(clientSocket, msg);
 	free(msg);
 	return;
 }
@@ -205,14 +205,14 @@ void start_listen(User *usersArray, int numOfUsers, int port) {
 	}
 
 	my_addr.sin_port = htons(port);
-	//TODO:my_addr.sin_addr = ask jhonatan!!!!!!
+	my_addr.sin_addr = INADDR_ANY;
+	my_addr.sin_family = AF_INET;
 	status = bind(socketfd, &my_addr, sizeof(my_addr));
 
 	if (status < 0) {
 		printf("Could not bind IP to socket\n");
 		return;
 	}
-
 	if (listen(socketfd, 1) < 0) {
 		printf("Could not listen...");
 		return;
@@ -232,26 +232,16 @@ void start_server(char* users_file, const char* dir_path, int port) {
 	//creating the main folder
 	//reading input file
 	FILE* usersFile = fopen(users_file, "r");
-
 	User* usersArray = (User*) malloc(15 * sizeof(User));
 	int numOfUsers = 0;
-	/*struct stat dirctry;
-
-	 stat(dir_path, &dirctry);*/
-
 	if (usersFile != NULL) {
 		char* user_buffer = (char*) malloc(sizeof(char*) * 26);
 		char* pass_buffer = (char*) malloc(sizeof(char*) * 26);
-
-		//	const char* fileDirPath = (char*) malloc(sizeof(dir_path) + 27);
-
 		while (sscanf(usersFile, "%s", user_buffer) > 0) {
-			const char* fileDirPath = (char*) malloc(sizeof(dir_path) + 27);
-
+			const char* fileDirPath = (char*) malloc(sizeof(dir_path) + 1);
 			strcpy(fileDirPath, dir_path);
 			strcat(fileDirPath, "/");
 			strcat(fileDirPath, user_buffer);
-
 			if (!mkdir(fileDirPath)) {
 				User* newUser = (User*) malloc(sizeof(User));
 				strcpy(newUser->user_name, user_buffer);
@@ -266,9 +256,8 @@ void start_server(char* users_file, const char* dir_path, int port) {
 			free(user_buffer);
 			free(pass_buffer);
 			free(fileDirPath);
-
-			user_buffer = (char*) malloc(sizeof(char*) * 26);
-			pass_buffer = (char*) malloc(sizeof(char*) * 26);
+			user_buffer = (char*) malloc(sizeof(char*) * MAX_USERNAME_SIZE +1 +strlen("User :"));
+			pass_buffer = (char*) malloc(sizeof(char*) * MAX_PASSWORD_SIZE + 1 + strlen("Password"));
 		}
 		start_listen(usersArray);
 	}
