@@ -94,7 +94,7 @@ void sendFileToClient(int clientSocket, Message* msg, User* user) {
 	int file_size;
 	char * username = user->user_name;
 	FILE* fp;
-	char pathToFile[sizeof(user->dir_path) + sizeof(msg->arg1) + 1];
+	char pathToFile[strlen(user->dir_path) + strlen(msg->arg1) + 1];
 	sprintf(pathToFile, sizeof(pathToFile), "%s/%s/%s", user->dir_path,
 			user->user_name, msg->arg1);
 	fp = fopen(pathToFile, "rb");
