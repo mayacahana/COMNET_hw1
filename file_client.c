@@ -25,13 +25,12 @@ int main(int argc, char* argv[]) {
 		printf("Invalid arguments. usage: [[hostname][port]]");
 		return 1;
 	}
-	if (argc > 1) { // including hostname
+	if (argc > 1) { // the input including hostname
 		hostname = argv[1];
-		if (argc == 3) {
+		if (argc == 3) { //including port
 			port = atoi(argv[2]);
 		}
 	}
-
 	client_start(hostname, port);
 	return 0;
 }
