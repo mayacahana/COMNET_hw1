@@ -1,43 +1,6 @@
-################################################################################
-# Automatically-generated file. Do not edit!
-################################################################################
-
--include ../makefile.init
-
-RM := rm -rf
-
-# All of the sources participating in the build are defined here
--include sources.mk
--include subdir.mk
--include objects.mk
-
-ifneq ($(MAKECMDGOALS),clean)
-ifneq ($(strip $(C_DEPS)),)
--include $(C_DEPS)
-endif
-endif
-
--include ../makefile.defs
-
-# Add inputs and outputs from these tool invocations to the build variables 
-
-# All Target
-all: COMNET_hw1
-
-# Tool invocations
-COMNET_hw1: $(OBJS) $(USER_OBJS)
-	@echo 'Building target: $@'
-	@echo 'Invoking: MacOS X C Linker'
-	gcc  -o "COMNET_hw1" $(OBJS) $(USER_OBJS) $(LIBS)
-	@echo 'Finished building target: $@'
-	@echo ' '
-
-# Other Targets
+all:
+	gcc -Wall -g -o  server file_server.h file_server.c server_protocol.h server_protocol.c
+	gcc -Wall -g -o  client file_client.h file_client.c client_protocol.h client_protocol.c
 clean:
-	-$(RM) $(EXECUTABLES)$(OBJS)$(C_DEPS) COMNET_hw1
-	-@echo ' '
-
-.PHONY: all clean dependents
-.SECONDARY:
-
--include ../makefile.targets
+	@rm -f $(PROGRAMS) *.o server
+	@rm -f $(PROGRAMS) *.o client
