@@ -73,7 +73,7 @@ int defineUser(int serverSocket) {
 			m->arg1 = username;
 			m->arg2 = password;
 			m->fromClient = 1;
-			status = send_command(m, sockfd);
+			status = send_command(m, serverSocket);
 			receive_command(serverSocket, m);
 			if (strcmp(m->arg1, "WRONG") == 0) {
 				printf("Wrong username or passoword. Please try again. \n");
