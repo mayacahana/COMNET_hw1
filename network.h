@@ -33,7 +33,8 @@ typedef enum messageType{
 	DELETE_FILE,
 	ADD_FILE,
 	GET_FILE,
-	QUIT
+	QUIT,
+	ERROR
 } MessageType;
 
 typedef struct Message_t{
