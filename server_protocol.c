@@ -185,8 +185,7 @@ int client_serving(int clientSocket, User *users, int numOfUsers) {
 		if (user == NULL) {
 			char* command = "WRONG";
 			msg->arg1 = command;
-			msg
-			send_command( clientSocket)
+			send_command( clientSocket,msg);
 
 		}
 	}
