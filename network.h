@@ -46,9 +46,9 @@ typedef struct Message_t{
 
 
 
-int send_command(int sckt, Message msg_to_sent);
+int send_command(int sckt, Message* msg_to_sent);
 
-int receieve_command(int sckt, Message msg_recieved);
+int receive_command(int sckt, Message* msg_recieved);
 
 #endif  NETWORK_H_
 
