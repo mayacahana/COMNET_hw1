@@ -24,7 +24,7 @@ char* getUserDetails() {
  * removes last n bits from the string.
  */
 void chopN(char* str, size_t n) {
-	if (!str){
+	if (!str) {
 		return;
 	}
 	size_t len = strlen(str);
@@ -68,13 +68,11 @@ int defineUser(int serverSocket) {
 		//check if input is in correct format and create message
 		if ((strcmp(userPrefix, "User: ") == 0)
 				&& (strcmp(passwordPrefix, "Password: ") == 0)) {
-			//char* username = (char*) malloc(sizeof(char)*26);///
-			//char* password = (char*) malloc(sizeof(char)*26);////
 			chopN(fullUsername, 6);
 			chopN(fullPassword, 10);
 			m->type = LOGIN_DETAILS;
-			m->arg1 = fullUsername; ///username??
-			m->arg2 = fullPassword; ///password???
+			m->arg1 = fullUsername;
+			m->arg2 = fullPassword;
 			m->fromClient = 1;
 			status = send_command(serverSocket, m); ///check status
 			receive_command(serverSocket, m);
@@ -171,7 +169,7 @@ int sendClientCommand(char* commandStr, int serverSocket, int mySocketfd) {
 			printf("error, re-send message\n");
 			return 0;
 		}
-		status = receive_message(serverSocket, m);
+		status = receive_command(serverSocket, m);
 		if (status) {
 			printf("error in receiving message\n");
 			return 0;
@@ -197,7 +195,7 @@ int sendClientCommand(char* commandStr, int serverSocket, int mySocketfd) {
 			return 0;
 		}
 
-		status = receive_message(serverSocket, m);
+		status = receive_command(serverSocket, m);
 		if (status && (m->type != ERROR))
 			getFileClientSide(path_to_save, m->arg1);
 		else
@@ -241,29 +239,45 @@ void getFileClientSide(char* filePath, char* fileBuffer) {
 
 int client_start(char* hostname, int port) {
 	if (hostname == NULL) {
-		char* hostname = (char*) malloc(sizeof(char)*11);
-		strcpy(hostname,"localhost");
+		char* hostname = (char*) malloc(sizeof(char) * 11);
+		strcpy(hostname, "localhost");
 		port = 1337;
 	} else if (port == 0)
 		port = 1337;
 
-	int status;
+	int status, serverSocket;
+	char str_port[8];
 	int socketfd = socket(PF_INET, SOCK_STREAM, 0);
 
 	if (socketfd < 0) {
 		printf("Could not create socket\n");
 		return 1;
 	}
-
-	struct sockaddr_in my_addr, server_addr;
-
-	socklen_t server_size = sizeof(server_addr);
-
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(port);
-	server_addr.sin_addr = htonl(hostname);
-
-	int serverSocket = connect(socketfd, (struct sockaddr*)&server_addr, sizeof(struct sockaddr));
+	struct addrinfo *serv_info, *p;
+	struct sockaddr_in my_addr;
+	my_addr.sin_family = AF_INET;
+	my_addr.sin_port = htons(port);
+	// padding w/ zeros
+	bzero((char *) &my_addr, sizeof(my_addr));
+	sprintf(str_port, "%d", port);
+	status = getaddrinfo(hostname, str_port, NULL, &serv_info);
+	if (status < 0) {
+		printf("Function getaddrinfo() failed: \n");
+		return 1;
+	}
+	// loop
+	for (p = serv_info; p != NULL; p = p->ai_next) {
+		serverSocket = connect(socketfd, p->ai_addr, p->ai_addrlen);
+		if (status) {
+			continue;
+		}
+		break;
+	}
+	freeaddrinfo(serv_info);
+//	socklen_t server_size = sizeof(server_addr);
+//	server_addr.sin_family = AF_INET;
+//	server_addr.sin_port = htons(port);
+//	server_addr.sin_addr = he->h_addr_list;
 
 	if (serverSocket < 0) {
 		close(socketfd);
@@ -273,11 +287,10 @@ int client_start(char* hostname, int port) {
 	status = defineUser(serverSocket);
 
 	while (status == 0) {
-		int maxLen = MAX_COMMAND_NAME + MAX_PATH_NAME + MAX_FILE_NAME;
 		char* inputStr = NULL;
 		size_t n = 0;
-		int read = getline(&inputStr, n, stdin);
-		if (read != -1) {
+		size_t read_line = getline(&inputStr, &n, stdin);
+		if (read_line != -1) {
 			status = sendClientCommand(inputStr, socketfd, serverSocket);
 		} else
 			status = 1;

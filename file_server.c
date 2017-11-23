@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
 		printf("Directory doesn't exist or can not be opened\n");
 		return 1;
 	}
-	if (!S_ISDIR(dirctry)) {
+	if (IS_ISDIR(dirctry)) {
 		printf("%s is not a directory", dir_path);
 		return 1;
 	}
