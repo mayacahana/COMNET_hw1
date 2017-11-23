@@ -11,9 +11,9 @@
 
 
 typedef struct user_t {
-	const char* user_name;
-	const char* password;
-	const char* dir_path;
+	char* user_name;
+	char* password;
+	char* dir_path;
 } User;
 
 Message* createServerMessage(MessageType type, char* arg1, char* arg2);
@@ -21,7 +21,7 @@ void addFile(int clientSocket, Message* msg, User* user);
 void deleteFile(int clientSocket, Message* msg, User* user);
 void sendListOfFiles(int clientSocket, User* user);
 void sendFileToClient(int clientSocket, Message* msg, User* user) ;
-void handleMessage(int clientSocket, Message msg, User* user);
+void handleMessage(int clientSocket, Message* msg, User* user);
 void getNameAndFiles(int clientSocket, User* user);
 int client_serving(int clientSocket, User *users, int numOfUsers);
 void start_listen(User *usersArray, int numOfUsers, int port);

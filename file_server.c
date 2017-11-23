@@ -24,15 +24,16 @@ int main(int argc, char* argv[]) {
 	if (argc == 4) {
 		port = atoi(argv[3]);
 	}
+
 	if (stat(dir_path, &dirctry) < 0) {
 		printf("Directory doesn't exist or can not be opened\n");
 		return 1;
 	}
-	if (IS_ISDIR(dirctry)) {
+	if (!S_ISDIR(dirctry.st_mode)) {
 		printf("%s is not a directory", dir_path);
 		return 1;
 	}
-
+	printf("Entering start_server \n");
 	start_server(users_file, dir_path, port);
 
 	return 0;

@@ -77,8 +77,8 @@ void sendListOfFiles(int clientSocket, User* user) {
 	d = opendir(user->dir_path);
 	if (d != NULL) {
 		while ((dir = readdir(d)) != NULL) {
-			sprintf(file_name, dir->d_name);
-			sprintf(files_names + len(files_names), '%s\n',file_name);
+			sprintf(file_name,"%s\n",dir->d_name);
+			sprintf(files_names , "%s\n",file_name);
 		}
 		closedir(d);
 	}
@@ -90,13 +90,13 @@ void sendListOfFiles(int clientSocket, User* user) {
 
 void sendFileToClient(int clientSocket, Message* msg, User* user) {
 	// get the file name
-	char file_name[MAX_FILE_NAME];
-	int file_size;
-	char * username = user->user_name;
+//	char file_name[MAX_FILE_NAME];
+//	int file_size;
+//	char * username = user->user_name;
 	FILE* fp;
 	char pathToFile[strlen(user->dir_path) + strlen(msg->arg1) + 1];
-	sprintf(pathToFile, sizeof(pathToFile), "%s/%s/%s", user->dir_path,
-			user->user_name, msg->arg1);
+	sprintf(pathToFile, "%s/%s/%s", user->dir_path,user->user_name, msg->arg1);
+	puts(pathToFile);
 	fp = fopen(pathToFile, "rb");
 	if (fp == NULL) {
 		printf("Can't open the file to send");
@@ -107,7 +107,7 @@ void sendFileToClient(int clientSocket, Message* msg, User* user) {
 	char * fileBuffer = malloc(MAX_FILE_SIZE + 1);
 	fread(fileBuffer, MAX_FILE_SIZE, 1, fp);
 	fclose(fp);
-	fileBuffer[fileBuffer] = '\0';
+	//fileBuffer[fileBuffer] = '\0';
 	msg->arg1 = fileBuffer;
 	msg->fromClient = 0;
 	send_command(clientSocket, msg);
@@ -115,16 +115,16 @@ void sendFileToClient(int clientSocket, Message* msg, User* user) {
 	free(pathToFile);
 
 }
-void handleMessage(int clientSocket, Message msg, User* user) {
+void handleMessage(int clientSocket, Message *msg, User* user) {
 	if (!msg) {
 		return;
 	}
-	switch (msg.type) {
+	switch(msg->type) {
 	case LIST_OF_FILES:
 		sendListOfFiles(clientSocket, user);
 		return;
 	case DELETE_FILE:
-		deletFile(clientSocket, msg, user);
+		deleteFile(clientSocket, msg, user);
 		return;
 	case ADD_FILE:
 		addFile(clientSocket, msg, user);
@@ -170,14 +170,13 @@ void getNameAndFiles(int clientSocket, User* user) {
 
 int client_serving(int clientSocket, User *users, int numOfUsers) {
 	User* user = NULL;
-	int flag = 1;
 	Message *msg = (Message *) malloc(sizeof(Message) + 1);
 	receive_command(clientSocket, msg);
-	if (msg.type == LOGIN_DETAILS) {
+	if (msg->type == LOGIN_DETAILS) {
 		for (int i = 0; i < numOfUsers; i++) {
-			if (strcmp(users[i]->user_name, msg.arg1) == 0) {
-				if (strcmp(users[i]->password, msg.arg2) == 0) {
-					user = users[i];
+			if (strcmp(users[i].user_name, msg->arg1) == 0) {
+				if (strcmp(users[i].password, msg->arg2) == 0) {
+					user = &users[i];
 					getNameAndFiles(clientSocket, user);
 				}
 			}
@@ -189,9 +188,9 @@ int client_serving(int clientSocket, User *users, int numOfUsers) {
 
 		}
 	}
-	while (msg.type != QUIT) {
+	while (msg->type != QUIT) {
 		receive_command(clientSocket, msg);
-		handleMessage(clientSocket, msg);
+		handleMessage(clientSocket, msg, user);
 	}
 	return 0;
 }
@@ -207,9 +206,9 @@ void start_listen(User *usersArray, int numOfUsers, int port) {
 	}
 
 	my_addr.sin_port = htons(port);
-	my_addr.sin_addr = INADDR_ANY;
+	my_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	my_addr.sin_family = AF_INET;
-	status = bind(socketfd, &my_addr, sizeof(my_addr));
+	status = bind(socketfd, (struct sockaddr *)&my_addr, sizeof(my_addr));
 
 	if (status < 0) {
 		printf("Could not bind IP to socket\n");
@@ -220,7 +219,7 @@ void start_listen(User *usersArray, int numOfUsers, int port) {
 		return;
 	}
 	while (1) {
-		newsocketfd = accept(socketfd, &client_addr, &client_size);
+		newsocketfd = accept(socketfd,  (struct sockaddr *)&client_addr, &client_size);
 		if (newsocketfd < 0) {
 			printf("accept() not successful...");
 			return;
@@ -235,34 +234,44 @@ void start_server(char* users_file, const char* dir_path, int port) {
 	//reading input file
 	FILE* usersFile = fopen(users_file, "r");
 	User* usersArray = (User*) malloc(15 * sizeof(User));
+	printf("salami1 \n");
 	int numOfUsers = 0;
 	if (usersFile != NULL) {
 		char* user_buffer = (char*) malloc(sizeof(char*) * 26);
 		char* pass_buffer = (char*) malloc(sizeof(char*) * 26);
-		while (sscanf(usersFile, "%s", user_buffer) > 0) {
-			const char* fileDirPath = (char*) malloc(sizeof(dir_path) + 1);
+		char* fileDirPath = (char*) malloc(sizeof(dir_path) + 1);
+		while (fscanf(usersFile, "%s\t", user_buffer) > 0) {
+			printf("%s \n", user_buffer);
 			strcpy(fileDirPath, dir_path);
 			strcat(fileDirPath, "/");
 			strcat(fileDirPath, user_buffer);
-			if (!mkdir(fileDirPath)) {
+			printf("file dir path: %s \n", fileDirPath);
+			if (!mkdir(fileDirPath ,ACCESSPERMS)) {
 				User* newUser = (User*) malloc(sizeof(User));
-				strcpy(newUser->user_name, user_buffer);
-				sscanf(usersFile, "%s", pass_buffer);
-				strcpy(newUser->password, pass_buffer);
-				strcpy(newUser->dir_path, fileDirPath);
-				usersArray[numOfUsers] = newUser;
+				newUser->user_name = user_buffer;
+				printf("check this!!! \n");
+
+				fscanf(usersFile, "%s\n", pass_buffer);
+				printf("pass_buffer: %s\n", pass_buffer);
+				newUser->password =pass_buffer;
+				newUser->dir_path = fileDirPath;
+				usersArray[numOfUsers] = *newUser;
 				numOfUsers++;
+				printf("newUSER\n");
+				free(newUser);
 			} else {
-				printf("cannot create user directory for :%s", user_buffer);
+				printf("Error: %s \n",strerror(errno));
+				printf("cannot create user directory for :%s\n", user_buffer);
 			}
-			free(user_buffer);
-			free(pass_buffer);
-			free(fileDirPath);
 			user_buffer = (char*) malloc(
 					sizeof(char*) * MAX_USERNAME_SIZE + 1 + strlen("User :"));
 			pass_buffer = (char*) malloc(
 					sizeof(char*) * MAX_PASSWORD_SIZE + 1 + strlen("Password"));
+
 		}
-		start_listen(usersArray);
+		free(fileDirPath);
+		free(user_buffer);
+		free(pass_buffer);
+		start_listen(usersArray, numOfUsers, port);
 	}
 }

@@ -10,8 +10,8 @@
 
 char* getUserDetails() {
 	char* userDetails = NULL;
-	size_t* n = 0;
-	int read = getline(&userDetails, &n, stdin);
+	size_t n = 0;
+	size_t read = getline(&userDetails, &n, stdin);
 	if (read != -1) {
 		puts(userDetails);
 		return userDetails;
@@ -278,10 +278,10 @@ int client_start(char* hostname, int port) {
 //	server_addr.sin_family = AF_INET;
 //	server_addr.sin_port = htons(port);
 //	server_addr.sin_addr = he->h_addr_list;
-
+	printf("Server socket: %d \n", serverSocket);
 	if (serverSocket < 0) {
 		close(socketfd);
-		printf("connection failed");
+		printf("Connection failed \n");
 		return 1;
 	}
 	status = defineUser(serverSocket);

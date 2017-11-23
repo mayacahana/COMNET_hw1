@@ -19,7 +19,7 @@
 #define DEFAULT_PORT 1337
 
 int main(int argc, char* argv[]) {
-	const char* hostname = DEFAULT_HOSTNAME;
+	char* hostname = DEFAULT_HOSTNAME;
 	int port = DEFAULT_PORT;
 	if (argc > 3) {
 		printf("Invalid arguments. usage: [[hostname][port]]");

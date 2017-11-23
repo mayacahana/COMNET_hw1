@@ -17,6 +17,8 @@
 #include <netdb.h>
 #include <dirent.h>
 #include <string.h>
+#include <unistd.h>
+#include <errno.h>
 
 #define MAX_USERNAME_SIZE 25
 #define MAX_PASSWORD_SIZE 25
@@ -51,5 +53,5 @@ int send_command(int sckt, Message* msg_to_sent);
 
 int receive_command(int sckt, Message* msg_recieved);
 
-#endif  NETWORK_H_
+#endif
 
