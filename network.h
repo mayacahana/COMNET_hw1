@@ -19,6 +19,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include <arpa/inet.h>
 
 #define MAX_USERNAME_SIZE 25
 #define MAX_PASSWORD_SIZE 25

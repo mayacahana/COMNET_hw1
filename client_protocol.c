@@ -246,7 +246,7 @@ int client_start(char* hostname, int port) {
 		port = 1337;
 
 	int status, serverSocket;
-	char str_port[8];
+	//char str_port[8];
 	int socketfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	if (socketfd < 0) {
@@ -278,6 +278,7 @@ int client_start(char* hostname, int port) {
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(port);
 	inet_aton(hostname, &server_addr.sin_addr);
+	serverSocket = connect(socketfd, (struct sockaddr*) &server_addr, sizeof(server_addr));
 	printf("Server socket: %d \n", serverSocket);
 	if (serverSocket < 0) {
 		close(socketfd);

@@ -32,7 +32,6 @@ void addFile(int clientSocket, Message* msg, User* user) {
 		msgToSend = createServerMessage(msg->type, "ERROR", NULL);
 		send_command(clientSocket, msgToSend);
 		free(msgToSend);
-		free(pathToFile);
 		return;
 	}
 	fwrite(msg->arg2, sizeof(char), MAX_FILE_SIZE, file);
@@ -40,7 +39,6 @@ void addFile(int clientSocket, Message* msg, User* user) {
 	msg = createServerMessage(msg->type, "File added", NULL);
 	send_command(clientSocket, msg);
 	free(msg);
-	free(pathToFile);
 
 }
 
@@ -211,7 +209,7 @@ void start_listen(User *usersArray, int numOfUsers, int port) {
 	status = bind(socketfd, (struct sockaddr *)&my_addr, sizeof(my_addr));
 
 	if (status < 0) {
-		printf("Could not bind IP to socket\n");
+		printf("Error type: %d\n", errno);
 		return;
 	}
 	if (listen(socketfd, 1) < 0) {
