@@ -15,7 +15,7 @@
 #include <fcntl.h>
 #include "client_protocol.h"
 
-#define DEFAULT_HOSTNAME "localhost"
+#define DEFAULT_HOSTNAME "127.0.0.1"
 #define DEFAULT_PORT 1337
 
 int main(int argc, char* argv[]) {

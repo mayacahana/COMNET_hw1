@@ -247,19 +247,19 @@ int client_start(char* hostname, int port) {
 
 	int status, serverSocket;
 	char str_port[8];
-	int socketfd = socket(PF_INET, SOCK_STREAM, 0);
+	int socketfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	if (socketfd < 0) {
 		printf("Could not create socket\n");
 		return 1;
 	}
-	struct addrinfo *serv_info, *p;
-	struct sockaddr_in my_addr;
-	my_addr.sin_family = AF_INET;
-	my_addr.sin_port = htons(port);
+	//struct addrinfo *serv_info, *p;
+	struct sockaddr_in server_addr;
+	//my_addr.sin_family = AF_INET;
+	//my_addr.sin_port = htons(port);
 	// padding w/ zeros
-	bzero((char *) &my_addr, sizeof(my_addr));
-	sprintf(str_port, "%d", port);
+	//bzero((char *) &my_addr, sizeof(my_addr));
+	/*sprintf(str_port, "%d", port);
 	status = getaddrinfo(hostname, str_port, NULL, &serv_info);
 	if (status < 0) {
 		printf("Function getaddrinfo() failed: \n");
@@ -273,11 +273,11 @@ int client_start(char* hostname, int port) {
 		}
 		break;
 	}
-	freeaddrinfo(serv_info);
-//	socklen_t server_size = sizeof(server_addr);
-//	server_addr.sin_family = AF_INET;
-//	server_addr.sin_port = htons(port);
-//	server_addr.sin_addr = he->h_addr_list;
+	freeaddrinfo(serv_info);*/
+	memset(&server_addr, '0', sizeof(server_addr));
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons(port);
+	inet_aton(hostname, &server_addr.sin_addr);
 	printf("Server socket: %d \n", serverSocket);
 	if (serverSocket < 0) {
 		close(socketfd);
