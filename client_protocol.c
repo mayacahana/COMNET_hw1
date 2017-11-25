@@ -31,8 +31,11 @@ int defineUser(int serverSocket) {
 	int status = 1;
 	Message* m = (Message*) malloc(sizeof(Message));
 	if (!m){
+		printf("malloc failed\n");
+		fflush(NULL);
 		status = 0;
 	}
+
 	//get username and password
 	while (status) {
 		status =0;
@@ -310,13 +313,15 @@ int client_start(char* hostname, int port) {
 	server_addr.sin_port = htons(port);
 	inet_aton(hostname, &server_addr.sin_addr);
 	serverSocket = connect(socketfd, (struct sockaddr*) &server_addr, sizeof(server_addr));
-	printf("Server socket: %d \n", serverSocket);
 	if (serverSocket < 0) {
 		close(socketfd);
 		printf("Connection failed \n");
 		return 1;
 	}
-	status = defineUser(serverSocket);
+	fflush(NULL);
+	status = defineUser(socketfd);
+	printf("status: %d\n", status);
+	fflush(NULL);
 	while (status == 0) {
 		char* inputStr = (char*)malloc(sizeof(char)*(MAX_COMMAND_NAME));
 		fgets(inputStr, MAX_COMMAND_NAME, stdin);
