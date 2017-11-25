@@ -36,7 +36,7 @@ int receive_command(int sckt, Message* msg_recieved) {
 	while (total < bytesLeft) {
 		printf("Im before recv \n");
 		n = recv(sckt, (void*) buffer, bytesLeft, 0);
-		print("bytes sent = %d\n", n);
+		printf("bytes sent = %d\n", n);
 		if (n < 0) {
 			printf("Receive message with recv() failed.\n %s", strerror(errno));
 			return 1;
