@@ -12,7 +12,7 @@
 
 #include <stdio.h>
 
-char* getUserDetails();
+void getUserDetails();
 void chopN(char* str, size_t n);
 int defineUser(int serverSocket);
 Message* createMessage(char* commandStr, MessageType type, char* prefix);

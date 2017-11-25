@@ -8,16 +8,15 @@
 
 #include "client_protocol.h"
 
-char* getUserDetails() {
-	char* userDetails = NULL;
-	size_t n = 0;
-	size_t read = getline(&userDetails, &n, stdin);
-	if (read != -1) {
-		puts(userDetails);
-		return userDetails;
-	}
+void getUserDetails(char* userDetails) {
+	printf("in getUserDetails\n");
+	fflush(NULL);
+	scanf("%s", userDetails);
+	printf("after getline\n");
+	fflush(NULL);
+	printf("userDetails: %s\n", userDetails);
+	fflush(NULL);
 	printf("No Line Read");
-	return NULL;
 }
 /*
  * @param pointer to string and size_t variable n
@@ -38,14 +37,23 @@ void chopN(char* str, size_t n) {
  * returns 0 if succeeds, otherwise returns 1
  */
 int defineUser(int serverSocket) {
-	Message* m = (Message*) malloc(sizeof(Message));
 	int status = 0;
+	Message* m = (Message*) malloc(sizeof(Message));
+	if (!m){
+		printf("malloc failed\n");
+		fflush(NULL);
+		status = 1;
+	}
+	printf("malloc succeeded\n");
 	//get username and password
-	while (status) {
-		char* fullPassword;
-		char* fullUsername = getUserDetails();
+	while (!status) {
+		printf("in while");
+		char* fullUsername= (char*) malloc (sizeof(char)*( MAX_USERNAME_SIZE + strlen("user: ")));
+		char* fullPassword = (char*) malloc (sizeof(char)*( MAX_USERNAME_SIZE + strlen("password: ")));
+		getUserDetails(fullUsername);
+		printf("after getUserDetails\n");
 		if (strcmp(fullUsername, "quit") != 0) {
-			fullPassword = getUserDetails();
+			getUserDetails(fullPassword);
 			if (strcmp(fullPassword, "quit") == 0) {
 				m->type = QUIT;
 			}
@@ -84,6 +92,8 @@ int defineUser(int serverSocket) {
 			printf("wrong format");	// fix this
 			status = 1;
 		}
+		free(fullUsername);
+		free(fullPassword);
 	}	//end of while
 	free(m);
 	return status;
@@ -285,7 +295,13 @@ int client_start(char* hostname, int port) {
 		printf("Connection failed \n");
 		return 1;
 	}
+	printf("before user dfinition\n");
+	fflush(NULL);
 	status = defineUser(serverSocket);
+
+	printf("status: %d", status);
+	fflush(NULL);
+
 
 	while (status == 0) {
 		char* inputStr = NULL;

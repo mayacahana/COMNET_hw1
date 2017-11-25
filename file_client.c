@@ -16,9 +16,11 @@
 #include "client_protocol.h"
 
 #define DEFAULT_HOSTNAME "127.0.0.1"
-#define DEFAULT_PORT 1337
+//#define DEFAULT_PORT 1337
+#define DEFAULT_PORT 2235
 
 int main(int argc, char* argv[]) {
+	printf("i am in main\n");
 	char* hostname = DEFAULT_HOSTNAME;
 	int port = DEFAULT_PORT;
 	if (argc > 3) {
@@ -31,6 +33,11 @@ int main(int argc, char* argv[]) {
 			port = atoi(argv[2]);
 		}
 	}
+	printf("starting client\n");
+	fflush(NULL);
 	client_start(hostname, port);
+	printf("client started\n");
+	fflush(NULL);
 	return 0;
+
 }
