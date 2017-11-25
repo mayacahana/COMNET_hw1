@@ -16,7 +16,6 @@ void getUserDetails(char* userDetails) {
 	fflush(NULL);
 	printf("userDetails: %s\n", userDetails);
 	fflush(NULL);
-	printf("No Line Read");
 }
 /*
  * @param pointer to string and size_t variable n
