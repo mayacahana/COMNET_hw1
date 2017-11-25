@@ -26,22 +26,23 @@ int send_command(int sckt, Message* msg_to_sent) {
 	return 0;
 }
 
-
 int receive_command(int sckt, Message* msg_recieved) {
 	int total = 0;
-	int bytesLeft = sizeof(msg_recieved->type) + strlen(msg_recieved->arg1)
-			+ strlen(msg_recieved->arg2);
+	int bytesLeft = sizeof(msg_recieved);
 	int n, len = bytesLeft;
 	while (total < bytesLeft) {
+		printf("Im before recv \n");
 		n = recv(sckt, msg_recieved, bytesLeft, 0);
+		printf("Im after recv \n");
 		if (n < 0) {
-			printf("Receive message with recv() failed.");
+			printf("Receive message with recv() failed.\n");
 			return 1;
 		}
 		total += n;
 		bytesLeft -= n;
 	}
-	if (total != len){
+	printf("noe total=bytes left\n");
+	if (total != len) {
 		printf("Receive wrong amount of bytes in recv().");
 		return 1;
 	}
@@ -51,3 +52,4 @@ int receive_command(int sckt, Message* msg_recieved) {
 	}
 	return 0;
 }
+

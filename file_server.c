@@ -19,6 +19,7 @@ int main(int argc, char* argv[]) {
 	}
 	struct stat dirctry;
 	char* users_file = argv[1];
+	//users_file[sizeof(users_file)] = 0;
 	char* dir_path = argv[2];
 	int port = DEF_PORT;
 	if (argc == 4) {
