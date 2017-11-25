@@ -28,16 +28,17 @@ void chopN(char* str, size_t n) {
  * returns 0 if succeeds, otherwise returns 1
  */
 int defineUser(int serverSocket) {
-	int status = 0;
+	int status = 1;
 	Message* m = (Message*) malloc(sizeof(Message));
 	if (!m){
 		printf("malloc failed\n");
 		fflush(NULL);
-		status = 1;
+		status = 0;
 	}
 	printf("malloc succeeded\n");
 	//get username and password
-	while (!status) {
+	while (status) {
+		status =0;
 		printf("in while\n");//DELETE THIS
 		char* fullUsername= (char*) malloc (sizeof(char)*( MAX_USERNAME_SIZE + strlen("user: ")));
 		char* fullPassword = (char*) malloc (sizeof(char)*( MAX_USERNAME_SIZE + strlen("password: ")));
@@ -46,19 +47,17 @@ int defineUser(int serverSocket) {
 		fgets(fullUsername, userMaxLen, stdin);
 		printf("fullUsername: %s\n", fullUsername); // DELETE THIS
 		fflush(NULL); //DELETE THIS
-		if (strcmp(fullUsername, "quit") != 0) {
+		if (strcmp(fullUsername, "quit\n") != 0) {
 			fgets(fullPassword, passMaxLen, stdin);
 			printf("fullPassword: %s\n", fullPassword);//DELETE THIS
 			fflush(NULL);//DELETE THIS
-			if (strcmp(fullPassword, "quit") == 0) {
-				printf("we got 'quit' \n");
+			if (strcmp(fullPassword, "quit\n") == 0) {
 				m->type = QUIT;
 			}
 		} else {
 			m->type = QUIT;
 		}
 		if (m->type == QUIT) {
-			printf("m->type is quit\n");
 			free(m);
 			return 1;
 		}
@@ -91,8 +90,8 @@ int defineUser(int serverSocket) {
 			m->arg1 = fullUsername;
 			m->arg2 = fullPassword;
 			m->fromClient = 1;
-			//status = send_command(serverSocket, m); ///check status
-			//receive_command(serverSocket, m);
+			send_command(serverSocket, m); ///check status
+			receive_command(serverSocket, m);
 			if (strcmp(m->arg1, "WRONG") == 0) {
 				printf("Wrong username or passoword. Please try again. \n");
 			} else
@@ -103,7 +102,7 @@ int defineUser(int serverSocket) {
 		}
 		free(fullUsername);
 		free(fullPassword);
-	}	//end of while
+	}//end of while
 	free(m);
 	return status;
 }
@@ -121,6 +120,7 @@ Message* createMessage(char* commandStr, MessageType type, char* prefix) {
 }
 
 int sendClientCommand(char* commandStr, int serverSocket, int mySocketfd) {
+	printf("in sendClientCommand\n");
 	int status = 0;
 	char inputPrefix[15];
 	strncpy(inputPrefix, commandStr, 14);
@@ -307,22 +307,19 @@ int client_start(char* hostname, int port) {
 		printf("Connection failed \n");
 		return 1;
 	}
-	printf("before user dfinition\n");
+	printf("before user definition\n");
 	fflush(NULL);
 	status = defineUser(serverSocket);
 
-	printf("status: %d", status);
+	printf("status: %d\n", status);
 	fflush(NULL);
 
 
 	while (status == 0) {
-		char* inputStr = NULL;
-		size_t n = 0;
-		size_t read_line = getline(&inputStr, &n, stdin);
-		if (read_line != -1) {
-			status = sendClientCommand(inputStr, socketfd, serverSocket);
-		} else
-			status = 1;
+		char* inputStr = (char*)malloc(sizeof(char)*(MAX_COMMAND_NAME));
+		fgets(inputStr, MAX_COMMAND_NAME, stdin);
+		printf("%s\n", inputStr);
+		status = sendClientCommand(inputStr, socketfd, serverSocket);
 	}
 
 	if (close(socketfd) == -1) {

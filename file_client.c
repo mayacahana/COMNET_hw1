@@ -36,7 +36,6 @@ int main(int argc, char* argv[]) {
 	printf("starting client\n");
 	fflush(NULL);
 	client_start(hostname, port);
-	printf("client started\n");
 	fflush(NULL);
 	return 0;
 
