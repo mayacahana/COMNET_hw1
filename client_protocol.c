@@ -16,6 +16,7 @@ void getUserDetails(char* userDetails) {
 	fflush(NULL);
 	printf("userDetails: %s\n", userDetails);
 	fflush(NULL);
+	printf("No Line Read");
 }
 /*
  * @param pointer to string and size_t variable n
@@ -250,9 +251,11 @@ int client_start(char* hostname, int port) {
 	if (hostname == NULL) {
 		char* hostname = (char*) malloc(sizeof(char) * 11);
 		strcpy(hostname, "localhost");
-		port = 1337;
+		//port = 1337;
+		port = 2235;
 	} else if (port == 0)
-		port = 1337;
+		//port = 1337;
+		port = 2235;
 
 	int status, serverSocket;
 	//char str_port[8];
