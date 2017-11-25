@@ -12,7 +12,6 @@
 
 #include <stdio.h>
 
-void getUserDetails();
 void chopN(char* str, size_t n);
 int defineUser(int serverSocket);
 Message* createMessage(char* commandStr, MessageType type, char* prefix);

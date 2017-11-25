@@ -8,16 +8,7 @@
 
 #include "client_protocol.h"
 
-void getUserDetails(char* userDetails) {
-	printf("in getUserDetails\n");
-	fflush(NULL);
-	scanf("%s", userDetails);
-	printf("after getline\n");
-	fflush(NULL);
-	printf("userDetails: %s\n", userDetails);
-	fflush(NULL);
-	printf("No Line Read");
-}
+
 /*
  * @param pointer to string and size_t variable n
  * removes last n bits from the string.
@@ -47,20 +38,27 @@ int defineUser(int serverSocket) {
 	printf("malloc succeeded\n");
 	//get username and password
 	while (!status) {
-		printf("in while");
+		printf("in while\n");//DELETE THIS
 		char* fullUsername= (char*) malloc (sizeof(char)*( MAX_USERNAME_SIZE + strlen("user: ")));
 		char* fullPassword = (char*) malloc (sizeof(char)*( MAX_USERNAME_SIZE + strlen("password: ")));
-		getUserDetails(fullUsername);
-		printf("after getUserDetails\n");
+		int userMaxLen = MAX_USERNAME_SIZE + strlen("User: ");
+		int passMaxLen = MAX_USERNAME_SIZE + strlen("Password: ");
+		fgets(fullUsername, userMaxLen, stdin);
+		printf("fullUsername: %s\n", fullUsername); // DELETE THIS
+		fflush(NULL); //DELETE THIS
 		if (strcmp(fullUsername, "quit") != 0) {
-			getUserDetails(fullPassword);
+			fgets(fullPassword, passMaxLen, stdin);
+			printf("fullPassword: %s\n", fullPassword);//DELETE THIS
+			fflush(NULL);//DELETE THIS
 			if (strcmp(fullPassword, "quit") == 0) {
+				printf("we got 'quit' \n");
 				m->type = QUIT;
 			}
 		} else {
 			m->type = QUIT;
 		}
 		if (m->type == QUIT) {
+			printf("m->type is quit\n");
 			free(m);
 			return 1;
 		}
@@ -74,16 +72,27 @@ int defineUser(int serverSocket) {
 		userPrefix[6] = '\0'; // "User: " if in correct format
 		passwordPrefix[10] = '\0'; // "Password: " if in correct format
 		//check if input is in correct format and create message
+
+		printf("userPrefix: %s\n", userPrefix);
+		fflush(NULL);
+		printf("passwordPrefix: %s\n", passwordPrefix);
+		fflush(NULL);
 		if ((strcmp(userPrefix, "User: ") == 0)
 				&& (strcmp(passwordPrefix, "Password: ") == 0)) {
 			chopN(fullUsername, 6);
 			chopN(fullPassword, 10);
+
+			printf("user: %s\n", fullUsername);
+			fflush(NULL);
+			printf("password: %s\n", fullPassword);
+			fflush(NULL);
+
 			m->type = LOGIN_DETAILS;
 			m->arg1 = fullUsername;
 			m->arg2 = fullPassword;
 			m->fromClient = 1;
-			status = send_command(serverSocket, m); ///check status
-			receive_command(serverSocket, m);
+			//status = send_command(serverSocket, m); ///check status
+			//receive_command(serverSocket, m);
 			if (strcmp(m->arg1, "WRONG") == 0) {
 				printf("Wrong username or passoword. Please try again. \n");
 			} else
@@ -248,6 +257,7 @@ void getFileClientSide(char* filePath, char* fileBuffer) {
 }
 
 int client_start(char* hostname, int port) {
+	printf("i am in clientStart\n");
 	if (hostname == NULL) {
 		char* hostname = (char*) malloc(sizeof(char) * 11);
 		strcpy(hostname, "localhost");
