@@ -205,6 +205,7 @@ int client_serving(int clientSocket, User *users, int numOfUsers) {
 void start_listen(User *usersArray, int numOfUsers, int port) {
 	int status, newsocketfd;
 	int socketfd = socket(PF_INET, SOCK_STREAM, 0);
+	printf("socketfd = %d\n", socketfd);
 	if (socketfd == -1) {
 		printf("%s\n", strerror(errno));
 		return;
