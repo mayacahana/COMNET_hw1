@@ -28,7 +28,7 @@
 #define MAX_FILE_SIZE 512
 #define MAX_PATH_NAME 500
 #define MAX_FILE_NAME 50
-#define MAX_COMMAND_NAME 13
+#define MAX_COMMAND_NAME 15
 
 
 typedef enum messageType{
@@ -55,4 +55,3 @@ int send_command(int sckt, Message* msg_to_sent);
 int receive_command(int sckt, Message* msg_recieved);
 
 #endif
-
