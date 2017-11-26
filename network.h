@@ -41,8 +41,14 @@ typedef enum messageType{
 	ERROR
 } MessageType;
 
-typedef struct Message_t{
+typedef struct Header_t{
 	MessageType type;
+	short arg1len;
+	short arg2len;
+} MessageHeader;
+
+typedef struct Message_t{
+	MessageHeader header;
 	char* arg1;
 	char* arg2;
 	int fromClient;//1 - from client, 0 - from server
