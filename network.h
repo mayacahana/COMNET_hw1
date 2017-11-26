@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <arpa/inet.h>
 
+
 #define MAX_USERNAME_SIZE 25
 #define MAX_PASSWORD_SIZE 25
 #define MAX_CLIENTS 15
@@ -29,6 +30,9 @@
 #define MAX_PATH_NAME 500
 #define MAX_FILE_NAME 50
 #define MAX_COMMAND_NAME 15
+#define HEADER_SIZE (sizeof(MessageHeader))
+#define MAX_PACKET_SIZE 4096 // ask
+#define MAX_DATA_SIZE (MAX_PACKET_SIZE - HEADER_SIZE)
 
 
 typedef enum messageType{
@@ -42,7 +46,7 @@ typedef enum messageType{
 } MessageType;
 
 typedef struct Header_t{
-	MessageType type;
+	short type;
 	short arg1len;
 	short arg2len;
 } MessageHeader;
@@ -54,7 +58,9 @@ typedef struct Message_t{
 	int fromClient;//1 - from client, 0 - from server
 } Message;
 
+int sendAll(int socket, void*buffer, int* len);
 
+int receiveAll(int socket, void* buffer, int* len);
 
 int send_command(int sckt, Message* msg_to_sent);
 

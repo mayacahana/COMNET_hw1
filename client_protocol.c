@@ -49,12 +49,12 @@ int defineUser(int serverSocket) {
 			fgets(fullPassword, passMaxLen, stdin);
 			fflush(NULL);//DELETE THIS
 			if (strcmp(fullPassword, "quit\n") == 0) {
-				m->type = QUIT;
+				m->header.type = QUIT;
 			}
 		} else {
-			m->type = QUIT;
+			m->header.type = QUIT;
 		}
-		if (m->type == QUIT) {
+		if (m->header.type == QUIT) {
 			free(m);
 			return 1;
 		}
@@ -72,9 +72,11 @@ int defineUser(int serverSocket) {
 				&& (strcmp(passwordPrefix, "Password: ") == 0)) {
 			chopN(fullUsername, 6);
 			chopN(fullPassword, 10);
-			m->type = LOGIN_DETAILS;
+			m->header.type = LOGIN_DETAILS;
 			m->arg1 = fullUsername;
+			m->header.arg1len = strlen(fullUsername);
 			m->arg2 = fullPassword;
+			m->header.arg2len = strlen(fullPassword);
 			m->fromClient = 1;
 			send_command(serverSocket, m); ///check status
 			receive_command(serverSocket, m);
@@ -97,11 +99,13 @@ Message* createMessage(char* commandStr, MessageType type, char* prefix) {
 	Message* m = (Message*) malloc(sizeof(Message));
 	if (m == NULL)
 		return NULL;
-	m->type = type;
+	m->header.type = type;
 	m->fromClient = 1;
 	m->arg1 = prefix;
+	m->header.type = strlen(prefix);
 	chopN(commandStr, strlen(prefix));
 	m->arg2 = commandStr;
+	m->header.arg2len = strlen(m->arg2);
 	return m;
 }
 
@@ -224,7 +228,7 @@ int sendClientCommand(char* commandStr, int serverSocket, int mySocketfd) {
 		}
 
 		status = receive_command(serverSocket, m);
-		if (status && (m->type != ERROR))
+		if (status && (m->header.type != ERROR))
 			getFileClientSide(path_to_save, m->arg1);
 		else
 			printf("error in receiving message\n");

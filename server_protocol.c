@@ -11,8 +11,15 @@ Message* createServerMessage(MessageType type, char* arg1, char* arg2) {
 	Message* msg = (Message*) malloc(sizeof(Message));
 	msg->fromClient = 0;
 	msg->arg1 = arg1;
-	msg->arg2 = arg2;
-	msg->type = type;
+	msg->header.arg1len = strlen(arg1);
+	if (arg2 != NULL){
+		msg->arg2 = arg2;
+		msg->header.arg2len = strlen(arg2);
+	}
+	else{
+		msg->header.arg2len = 0;
+	}
+	msg->header.type = type;
 	return msg;
 }
 
@@ -36,14 +43,14 @@ void addFile(int clientSocket, Message* msg, User* user) {
 	Message* msgToSend;
 	if (file == NULL) {
 		printf("File Not Added\n");
-		msgToSend = createServerMessage(msg->type, "ERROR", NULL);
+		msgToSend = createServerMessage(msg->header.type, "ERROR", NULL);
 		send_command(clientSocket, msgToSend);
 		free(msgToSend);
 		return;
 	}
 	fwrite(msg->arg2, sizeof(char), MAX_FILE_SIZE, file);
 	fclose(file);
-	msg = createServerMessage(msg->type, "File added", NULL);
+	msg = createServerMessage(msg->header.type, "File added", NULL);
 	send_command(clientSocket, msg);
 	free(msg);
 
@@ -114,6 +121,7 @@ void sendFileToClient(int clientSocket, Message* msg, User* user) {
 	fclose(fp);
 	//fileBuffer[fileBuffer] = '\0';
 	msg->arg1 = fileBuffer;
+	msg->header.arg1len = strlen(fileBuffer);
 	msg->fromClient = 0;
 	send_command(clientSocket, msg);
 	free(fileBuffer);
@@ -124,7 +132,7 @@ void handleMessage(int clientSocket, Message *msg, User* user) {
 	if (!msg) {
 		return;
 	}
-	switch (msg->type) {
+	switch (msg->header.type) {
 	case LIST_OF_FILES:
 		sendListOfFiles(clientSocket, user);
 		return;
@@ -143,6 +151,7 @@ void handleMessage(int clientSocket, Message *msg, User* user) {
 }
 
 void getNameAndFiles(int clientSocket, User* user) {
+	printf("Im in getName\n");
 	if (!user) {
 		return;
 	}
@@ -179,7 +188,7 @@ int client_serving(int clientSocket, User *users, int numOfUsers) {
 	Message *msg = (Message *) malloc(sizeof(Message) + 1);
 	printf("I'm now recieve command\n");
 	receive_command(clientSocket, msg);
-	if (msg->type == LOGIN_DETAILS) {
+	if (msg->header.type == LOGIN_DETAILS) {
 		for (int i = 0; i < numOfUsers; i++) {
 			if (strcmp(users[i].user_name, msg->arg1) == 0) {
 				if (strcmp(users[i].password, msg->arg2) == 0) {
@@ -191,11 +200,12 @@ int client_serving(int clientSocket, User *users, int numOfUsers) {
 		if (user == NULL) {
 			char* command = "WRONG";
 			msg->arg1 = command;
+			msg->header.arg1len = strlen(command);
 			send_command(clientSocket, msg);
 
 		}
 	}
-	while (msg->type != QUIT) {
+	while (msg->header.type != QUIT) {
 		receive_command(clientSocket, msg);
 		handleMessage(clientSocket, msg, user);
 	}

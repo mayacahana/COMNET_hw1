@@ -6,55 +6,112 @@
  */
 #include "network.h"
 
-int send_command(int sckt, Message* msg_to_sent) {
-	int bytesLeft =  sizeof(msg_to_sent);
-	int total = 0; /* how many bytes we've sent */
-	int n, len = bytesLeft;
-	while (total < bytesLeft) {
-		n = send(sckt, msg_to_sent + total, bytesLeft, 0);
-		printf("sent %d bytes\n, socket = %d\n", n, sckt);
-		if (n < 0) {
-			printf("Send message with send() failed. %s\n", strerror(errno));
-			return 1;
-		}
-		total += n;
-		bytesLeft -= n;
-	}
-	if (total != len) {
-		printf("Sent wrong amount of bytes in send().");
-		return 1;
-	}
-	return 0;
-}
-
-int receive_command(int sckt, Message* msg_recieved) {
+int sendAll(int socket, void*buffer, int* len) {
+	printf("Im in send all\n");
 	int total = 0;
-	int bytesLeft = sizeof(msg_recieved);
-	int n, len = bytesLeft;
-	char* buffer;
-	buffer = (char *)malloc(sizeof(char)*MAX_FILE_SIZE+sizeof(Message));
-	while (total < bytesLeft) {
-		printf("Im before recv \n");
-		n = recv(sckt, (void*) buffer, bytesLeft, 0);
-		printf("bytes sent = %d\n", n);
+	int bytesLeft = *len;
+	int n;
+	while (total < *len) {
+		n = (int) send(socket, (void*)((long)buffer + total), (size_t) bytesLeft, 0);
 		if (n < 0) {
-			printf("Receive message with recv() failed.\n %s", strerror(errno));
-			return 1;
+			break;
 		}
 		total += n;
 		bytesLeft -= n;
 	}
-	printf("noe total=bytes left\n");
-	if (total != len) {
-		printf("Receive wrong amount of bytes in recv().");
+	*len = total;
+	return n == -1 ? -1 : 0;
+}
+int send_command(int sckt, Message* msg_to_send) {
+//	int len = HEADER_SIZE + msg_to_send->header.arg1len+ msg_to_send->header.arg2len;
+	printf("I'm in send command\n");
+	Message network_msg;
+	network_msg.header.arg1len = htons(msg_to_send->header.arg1len);
+	network_msg.header.arg2len = htons(msg_to_send->header.arg2len);
+	network_msg.header.type = htons(msg_to_send->header.type);
+	printf("before memcpy\n");
+	network_msg.arg1 = msg_to_send->arg1;
+	network_msg.arg2 = msg_to_send->arg2;
+	//memcpy(network_msg.arg1, msg_to_send->arg1, msg_to_send->header.arg1len+1);
+	//memcpy(network_msg.arg2, msg_to_send->arg2, msg_to_send->header.arg2len+1);
+	printf("after mem\n");
+	int arg1_len = (int) network_msg.header.arg1len;
+	int arg2_len = (int) network_msg.header.arg2len;
+	int header_len = sizeof(MessageHeader);
+	printf("before sent\n");
+	if (sendAll(sckt, &network_msg.header, &header_len)) {
+		printf("%s\n", strerror(errno));
+		printf("Bytes sent: %d \n", arg1_len);
 		return 1;
 	}
-	strcpy(msg_recieved->arg1, buffer);
-	free(buffer);
-	if (total > MAX_FILE_SIZE) {
-		printf("The message is too big. ");
+	if (sendAll(sckt, network_msg.arg1, &arg1_len)) {
+		printf("%s\n", strerror(errno));
+		printf("Bytes sent: %d \n", arg1_len);
 		return 1;
 	}
+	if (arg2_len > 0) {
+		if (sendAll(sckt, network_msg.arg2, &arg2_len)) {
+			printf("%s\n", strerror(errno));
+			printf("Bytes sent: %d \n", arg2_len);
+			return 1;
+		}
+	}
+
 	return 0;
 }
 
+int receiveAll(int socket, void* buffer, int* len) {
+	int total = 0;
+	int bytesLeft = *len;
+	int n;
+	while (total < *len) {
+		n = (int) recv(socket, (void*) ((long) buffer + total),
+				(size_t) bytesLeft, 0);
+		if (n < 0) {
+			break;
+		}
+		total += n;
+		bytesLeft -= n;
+	}
+	*len = total;
+	return n == -1 ? -1 : 0;
+}
+
+int receive_command(int sckt, Message* msg_received) {
+	//recieve the Messageeader first
+	int len_header = sizeof(MessageHeader);
+	if (receiveAll(sckt, &msg_received->header, &len_header)) {
+		printf("%s\n", strerror(errno));
+		printf("Bytes recieved: %d \n", len_header);
+		return 1;
+	}
+	msg_received->header.arg1len = ntohs(msg_received->header.arg1len);
+	msg_received->header.arg2len = ntohs(msg_received->header.arg2len);
+	msg_received->header.type = ntohs(msg_received->header.type);
+	if ((msg_received->header.arg1len + msg_received->header.arg2len)
+			> MAX_DATA_SIZE) {
+		printf("Recieve command failed- msg too big");
+		return 1;
+	}
+	//receive arg1
+	int len_arg1 = msg_received->header.arg1len;
+	msg_received->arg1 = (char*) malloc(sizeof(char*) + len_arg1);
+	if (receiveAll(sckt, &msg_received->arg1, &len_arg1)) {
+		printf("%s\n", strerror(errno));
+		printf("Bytes recieved: %d \n", len_header);
+		return 1;
+	}
+	//receive arg2
+	int len_arg2 = msg_received->header.arg2len;
+	if (len_arg2 > 0) {
+		msg_received->arg1 = (char*) malloc(sizeof(char*) + len_arg2);
+		if (receiveAll(sckt, &msg_received->arg2, &len_arg2)) {
+			printf("%s\n", strerror(errno));
+			printf("Bytes recieved: %d \n", len_header);
+			return 1;
+		}
+	}
+
+	return 0;
+
+}
