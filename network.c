@@ -95,7 +95,7 @@ int receive_command(int sckt, Message* msg_received) {
 	}
 	//receive arg1
 	int len_arg1 = msg_received->header.arg1len;
-	msg_received->arg1 = (char*) malloc(sizeof(char*) + len_arg1);
+	msg_received->arg1 = (char*) malloc(sizeof(char*)*len_arg1);
 	if (receiveAll(sckt, &msg_received->arg1, &len_arg1)) {
 		printf("%s\n", strerror(errno));
 		printf("Bytes recieved: %d \n", len_header);
@@ -104,7 +104,7 @@ int receive_command(int sckt, Message* msg_received) {
 	//receive arg2
 	int len_arg2 = msg_received->header.arg2len;
 	if (len_arg2 > 0) {
-		msg_received->arg1 = (char*) malloc(sizeof(char*) + len_arg2);
+		msg_received->arg1 = (char*) malloc(sizeof(char*)*len_arg2);
 		if (receiveAll(sckt, &msg_received->arg2, &len_arg2)) {
 			printf("%s\n", strerror(errno));
 			printf("Bytes recieved: %d \n", len_header);

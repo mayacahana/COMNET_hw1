@@ -169,6 +169,7 @@ void getNameAndFiles(int clientSocket, User* user) {
 	sprintf(arg, "Hi %s, you have %d files stored.\n", user->user_name,
 			numOfFiles);
 	Message* msg = createServerMessage(LOGIN_DETAILS, arg, NULL);
+	printf("arg1 = %s", msg->arg1);
 	send_command(clientSocket, msg);
 	free(arg);
 	free(msg);
@@ -188,6 +189,8 @@ int client_serving(int clientSocket, User *users, int numOfUsers) {
 	Message *msg = (Message *) malloc(sizeof(Message) + 1);
 	printf("I'm now recieve command\n");
 	receive_command(clientSocket, msg);
+	printf("arg1 = %s", msg->arg1);
+	printf("arg2 = %s", msg->arg2);
 	if (msg->header.type == LOGIN_DETAILS) {
 		for (int i = 0; i < numOfUsers; i++) {
 			if (strcmp(users[i].user_name, msg->arg1) == 0) {
