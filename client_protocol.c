@@ -210,7 +210,7 @@ int getFileCommand(Message* m, char* file_name, char* path_to_save,
 	}
 	status = receive_command(mySocket, m);
 	if (status == 0 && (m->header.type != ERROR)) {
-		char* pathToFile = (char*) calloc(sizeof(char),(strlen(path_to_save)+strlen(file_name)));
+		char* pathToFile = (char*) calloc((strlen(path_to_save)+strlen(file_name)), sizeof(char));
 		strcpy(pathToFile, path_to_save);
 		strcpy(pathToFile + strlen(path_to_save), file_name);
 		if (getFileClientSide(pathToFile, m->arg1))
