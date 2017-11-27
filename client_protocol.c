@@ -314,11 +314,9 @@ int client_start(char* hostname, int port) {
 	if (hostname == NULL) {
 		char* hostname = (char*) malloc(sizeof(char) * 11);
 		strcpy(hostname, "localhost");
-		//port = 1337;
-		port = 5566;
+		port = 1337;
 	} else if (port == 0)
-		//port = 1337;
-		port = 5566;
+		port = 1337;
 
 	int status, serverSocket;
 	int socketfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -347,7 +345,6 @@ int client_start(char* hostname, int port) {
 	} else {
 		printMessageArg(msg);
 		status = defineUser(socketfd);
-		printf("status: %d\n", status);
 		fflush(NULL);
 	}
 	free(msg);
