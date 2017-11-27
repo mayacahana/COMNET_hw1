@@ -27,10 +27,11 @@ void addFile(int clientSocket, Message* msg, User* user) {
 		printf("Error in Message or User");
 		return;
 	}
-	char pathToFile[sizeof(user->dir_path) + sizeof(msg->arg1) + 5];
+	char pathToFile[strlen(user->dir_path) + strlen(msg->arg1) + 5];
 	strcpy(pathToFile, user->dir_path);
 	strcat(pathToFile, "/");
 	strcat(pathToFile, msg->arg1);
+	printf("path = %\n", pathToFile);
 	FILE *file = fopen(pathToFile, "w");
 	Message* msgToSend;
 	if (file == NULL) {
