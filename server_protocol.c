@@ -200,7 +200,6 @@ int client_serving(int clientSocket, User **users, int numOfUsers) {
 	Message *response;
 	char* nameandfile;
 	int status = 1;
-	printf("I'm now recieve command\n");
 	while (status) {
 		receive_command(clientSocket, user_msg);
 		if (user_msg->header.type != QUIT) {
@@ -219,7 +218,6 @@ int client_serving(int clientSocket, User **users, int numOfUsers) {
 			if (user == NULL) {
 				response = createServerMessage(INVALID_LINE, "Wrong username or/and password. please try again\n");
 			}
-			printf("before send command");
 			send_command(clientSocket, response);
 			free(response);
 			if(user != NULL){
