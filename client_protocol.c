@@ -31,7 +31,7 @@ int defineUser(int scket) {
 	Message* user_msg = (Message*) malloc(sizeof(Message));
 	if (!user_msg) {
 		printf("malloc failed\n");
-		fflush(NULL );
+		fflush(NULL);
 		status = 0;
 	}
 
@@ -58,7 +58,7 @@ int defineUser(int scket) {
 			int passFlag = strcmp(passwordPrefix, "Password: ");
 			printf("%s\n%s\n", userPrefix, passwordPrefix); //DELETE THIS
 			if (strcmp(fullPassword, "quit\n") == 0) {
-				createQuitCommand(user_msg);
+				createQuitCommand(user_msg, scket);
 			} else if (passFlag || userFlag) {
 				printf("Wrong prefix of 'User:' or 'Password:'");
 				printf("u = %d, p = %d", userFlag, passFlag); // DELETE THIS
@@ -85,7 +85,7 @@ int defineUser(int scket) {
 
 			}
 		} else {
-			createQuitCommand(user_msg);
+			createQuitCommand(user_msg, scket);
 			send_command(scket, user_msg);
 			status = 1;
 		}
@@ -100,11 +100,11 @@ int defineUser(int scket) {
  * relevant field in the message struct.
  */
 void createMessageCommand(Message* m, MessageType type, char* string) {
-	if (m == NULL )
+	if (m == NULL)
 		return;
 	m->header.type = type;
-	if (string == NULL ) {
-		m->arg1 = NULL;
+	if (string == NULL) {
+		strcpy(m->arg1,"")	;
 		return;
 	}
 	strcpy(m->arg1, string);
@@ -120,13 +120,13 @@ void createMessageCommand(Message* m, MessageType type, char* string) {
 int createQuitCommand(Message* m, int mySocketfd) {
 	createMessageCommand(m, QUIT, "00");
 	int status = send_command(mySocketfd, m);
-	if (status != 0){
+	if (status != 0) {
 		printf("Error. re-send message %s\n", strerror(errno));
 		free(m);
 		return 1;
 	}
-	status = receive_command(mySocketfd,m);
-	if (status != 0){
+	status = receive_command(mySocketfd, m);
+	if (status != 0) {
 		printf("Error in receiving message %s\n", strerror(errno));
 	}
 	printMessageArg(m);
@@ -192,8 +192,8 @@ int addFileCommand(Message* m, char* commandStr, int mySocket) {
 		const char* s = " ";
 		/* get the first word of commandStr */
 		filePath = strtok(commandStr, s);
-		buffer = addFileClientSide(filePath); // buffer now has whole content of file
-		if (buffer == NULL ) {
+		addFileClientSide(buffer, filePath); // buffer now has whole content of file
+		if (buffer == NULL) {
 			free(commandStr);
 			free(m);
 			return 0;
@@ -220,7 +220,7 @@ int addFileCommand(Message* m, char* commandStr, int mySocket) {
 
 int getFileCommand(Message* m, char* commandStr, int mySocket) {
 	printf("im in get_file\n");
-	createMessageCommand(m, GET_FILE, inputPrefix);
+	createMessageCommand(m, GET_FILE, commandStr);
 	//char* path_to_save = (char*) malloc(strlen(m->arg2));
 	//strcpy(path_to_save, m->arg2);
 	int status = send_command(mySocket, m);
@@ -285,14 +285,14 @@ int sendClientCommand(char* commandStr, int sckt) {
 			} else if (getFileCommand(m, commandStr, sckt) == 1) {
 				printf("Error in get_file\n");
 				if (close(sckt) == -1)
-					printf("%s\n",strerror(errno));
+					printf("%s\n", strerror(errno));
 				return 1;
 			}
 		} else if (strcmp(op, "quit") == 0) {
-			if (createQuitCommand(m, sckt) == 1 ){
+			if (createQuitCommand(m, sckt) == 1) {
 				printf("Error in quitting \n");
 				if (close(sckt) == -1)
-					printf("%s\n",strerror(errno));
+					printf("%s\n", strerror(errno));
 				return 1;
 			}
 			break;
@@ -303,7 +303,7 @@ int sendClientCommand(char* commandStr, int sckt) {
 	}
 	//close socket
 	printf("end\n");
-	if(close(sckt) == -1){
+	if (close(sckt) == -1) {
 		printf("%s\n", strerror(errno));
 		return 1;
 	}
@@ -318,12 +318,12 @@ void addFileClientSide(char* buffer, char* filePath) {
 }
 
 void getFileClientSide(char* filePath, char* fileBuffer) {
-	if (filePath == NULL){
+	if (filePath == NULL) {
 		printf("no filePath received\n");
 		return;
 	}
 	FILE *file = fopen(filePath, "w");
-	if (file == NULL ) {
+	if (file == NULL) {
 		printf("File Not Opened\n");
 		return;
 	}
@@ -334,7 +334,7 @@ void getFileClientSide(char* filePath, char* fileBuffer) {
 }
 
 int client_start(char* hostname, int port) {
-	if (hostname == NULL ) {
+	if (hostname == NULL) {
 		char* hostname = (char*) malloc(sizeof(char) * 11);
 		strcpy(hostname, "localhost");
 //port = 1337;
