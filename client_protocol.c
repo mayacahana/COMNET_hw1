@@ -80,11 +80,12 @@ int defineUser(int scket) {
 				} else {
 					printf("Error in sending user name\n");
 				}
-
 			}
+			free(fullPassword);
 		} else {
 			status = createQuitCommand(user_msg, scket);
 		}
+		free(fullUsername);
 	}
 	free(user_msg);
 	return status;
@@ -182,6 +183,7 @@ int addFileCommand(Message* m, char* path_to_file, char* file_name,
 		createMessageCommand(fileContent, FILE_CONTENT, buffer);
 		status = send_command(mySocket, fileContent);
 		free(buffer);
+		free(fileContent);
 		if (status != 0) {
 			printf("error, re-send message\n");
 			free(m);
@@ -232,46 +234,56 @@ int sendClientCommand(char* commandStr, int mySocketfd) {
 			if (strcmp(str1, "add_file") == 0) {
 				if (addFileCommand(m, str2, str3, mySocketfd) == 1) {
 					printf("Error in add file command %s\n", strerror(errno));
+					free(c);
 					free(m);
 					return 1;
 				}
+				free(c);
+				free(m);
 				return 0;
 			} else if (strcmp(str1, "get_file") == 0) {
 				if (getFileCommand(m, str2, str3, mySocketfd) == 1) {
 					printf("Error in get file command %s\n", strerror(errno));
-					free(m);
+					free(c);
 					return 1;
 				}
+				free(c);
 				return 0;
 			} else {
 				printf("Error: Invalid command \n");
 				free(m);
+				free(c);
 				return 0;
 			}
 		}
 		if (strcmp(str1, "delete_file") == 0) {
 			if (deleteFileCommand(m, str2, mySocketfd) == 1) {
 				printf("Error in delete file command %s \n", strerror(errno));
-				free(m);
+				free(c);
 				return 1;
 			}
+			free(c);
 			return 0;
 		}
 	}
 	if (strcmp(str1, "list_of_files") == 0) {
 		if (listOfFilesCommand(m, commandStr, mySocketfd) == 1) {
 			printf("Error in get list of files command %s \n", strerror(errno));
-			free(m);
+			free(c);
 			return 1;
 		}
+		free(c);
 		return 0;
 	} else if (strcmp(str1, "quit") == 0) {
 		createQuitCommand(m, mySocketfd);
 		free(m);
+		free(c);
 		return 1; //quiting
 	} else {
 		printf("Invalid command \n");
 	}
+	free(c);
+	free(m);
 	return 0;
 }
 
@@ -337,6 +349,7 @@ int client_start(char* hostname, int port) {
 		printf("status: %d\n", status);
 		fflush(NULL);
 	}
+	free(msg);
 	char* inputStr;
 	while (status == 0) {
 		inputStr = (char*) malloc(
