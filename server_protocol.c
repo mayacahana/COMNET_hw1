@@ -309,7 +309,7 @@ void start_server(char* users_file, const char* dir_path, int port) {
 	if (usersFile != NULL) {
 		char* user_buffer = (char*) malloc(sizeof(char) * 26);
 		char* pass_buffer = (char*) malloc(sizeof(char) * 26);
-		char* fileDirPath = (char*) malloc(sizeof(char)*(strlen(dir_path)+sizeof(user_buffer)+2));
+		char* fileDirPath = (char*) malloc(sizeof(char)*(strlen(dir_path)+sizeof(user_buffer)+5));
 		while (fscanf(usersFile, "%s\t", user_buffer) > 0) {
 			strcpy(fileDirPath, dir_path);
 			fileDirPath[strlen(dir_path)] = '/';
@@ -326,9 +326,9 @@ void start_server(char* users_file, const char* dir_path, int port) {
 				printf("Error: %s \n", strerror(errno));
 				printf("cannot create user directory for :%s\n", user_buffer);
 			}
-			user_buffer = (char*) malloc(sizeof(char*) * 26);
-			pass_buffer = (char*) malloc(sizeof(char*) * 26);
-			fileDirPath = (char*) malloc(strlen(dir_path) + 1);
+			user_buffer = (char*) malloc(sizeof(char) * 26);
+			pass_buffer = (char*) malloc(sizeof(char) * 26);
+			fileDirPath = (char*) malloc(sizeof(char)*(strlen(dir_path) + sizeof(user_buffer)+5));
 		}
 		start_listen(usersArray, numOfUsers, port);
 	}
