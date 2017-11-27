@@ -33,7 +33,6 @@ int main(int argc, char* argv[]) {
 			port = atoi(argv[2]);
 		}
 	}
-	printf("starting client\n");
 	fflush(NULL);
 	client_start(hostname, port);
 	fflush(NULL);

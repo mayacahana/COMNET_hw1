@@ -19,7 +19,6 @@ int main(int argc, char* argv[]) {
 	}
 	struct stat dirctry;
 	char* users_file = argv[1];
-	//users_file[sizeof(users_file)] = 0;
 	char* dir_path = argv[2];
 	int port = DEF_PORT;
 	if (argc == 4) {
@@ -34,7 +33,6 @@ int main(int argc, char* argv[]) {
 		printf("%s is not a directory", dir_path);
 		return 1;
 	}
-	printf("Entering start_server \n");
 	start_server(users_file, dir_path, port);
 
 	return 0;

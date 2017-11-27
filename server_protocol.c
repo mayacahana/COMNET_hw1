@@ -68,7 +68,6 @@ void deleteFile(int clientSocket, Message* msg, User* user) {
 	strcpy(pathToFile, user->dir_path);
 	strcat(pathToFile, "/");
 	strcat(pathToFile, msg->arg1);
-	printf("in deleteFile server- pathtofile: %s\n",pathToFile);
 	int status = remove(pathToFile);
 	char* arg = (char*) malloc(sizeof(char) * 20);
 	if (status == 0) {
@@ -91,7 +90,6 @@ void sendListOfFiles(int clientSocket, User* user) {
 	DIR *d;
 	struct dirent *dir;
 	int numOfFiles=0;
-	printf("In list of files the dir is: %s \n", user->dir_path);
 	d = opendir(user->dir_path);
 	if (d != NULL) {
 		while ((dir = readdir(d)) != NULL) {
@@ -101,7 +99,6 @@ void sendListOfFiles(int clientSocket, User* user) {
 				strcat(files_names, file_name);
 			}
 		}
-		printf("Out of the while in this \n");
 		closedir(d);
 	} else {
 		printf("Wrong dir path for user %s \n", user->user_name);
@@ -116,9 +113,6 @@ void sendListOfFiles(int clientSocket, User* user) {
 
 void sendFileToClient(int clientSocket, Message* msg, User* user) {
 	// get the file name
-//	char file_name[MAX_FILE_NAME];
-//	int file_size;
-//	char * username = user->user_name;
 	FILE* fp;
 	char pathToFile[strlen(user->dir_path) + strlen(msg->arg1) + 1];
 	sprintf(pathToFile, "%s/%s", user->dir_path, msg->arg1);
@@ -129,7 +123,6 @@ void sendFileToClient(int clientSocket, Message* msg, User* user) {
 		fflush(NULL);
 		return;
 	}
-	printf("before read\n");
 	fflush(NULL);
 	//read the file into a buffer
 	char* fileBuffer = (char*) malloc(sizeof(char) * MAX_FILE_SIZE + 1);
@@ -139,19 +132,14 @@ void sendFileToClient(int clientSocket, Message* msg, User* user) {
 		return;
 	}
 	fread(fileBuffer, MAX_FILE_SIZE, 1, fp);
-	printf("file buffer: %s\n", fileBuffer);
 	fflush(NULL);
 	fclose(fp);
-	printf("fclose\n");
 	fflush(NULL);
-	//fileBuffer[fileBuffer] = '\0';
 	strcpy(msg->arg1, fileBuffer);
-	printf("strcpy\n");
 	fflush(NULL);
 	msg->header.arg1len = strlen(fileBuffer);
 	send_command(clientSocket, msg);
 	free(fileBuffer);
-	printf("free\n");
 }
 int handleMessage(int clientSocket, Message *msg, User* user) {
 	if (!msg) {
@@ -183,8 +171,6 @@ char* getNameAndFiles(User* user) {
 	int numOfFiles = 0;
 	DIR *d = opendir(user->dir_path);
 	struct dirent* dir;
-	printf("USER: %s \n", user->user_name);
-	printf("DIRPATH of user: %s\n", user->dir_path);
 	if (d) {
 		while ((dir = readdir(d)) != NULL) {
 			printf("In getNameandfiles: %s \n", dir->d_name);
@@ -194,11 +180,9 @@ char* getNameAndFiles(User* user) {
 	} else {
 		return NULL;
 	}
-	printf("before sprintf dir_path = %s\n", user->dir_path);
 	char* arg = (char*) malloc(sizeof(char) * (MAX_USERNAME_SIZE + 30));
 	sprintf(arg, "Hi %s, you have %d files stored.\n", user->user_name,
 			numOfFiles - 2);
-	printf("dir_path = %s\n", user->dir_path);
 	return arg;
 }
 
@@ -226,13 +210,9 @@ int client_serving(int clientSocket, User **users, int numOfUsers) {
 					if (strcmp(users[i]->password, pass_msg->arg1) == 0) {
 						user = users[i];
 						char* nameandfile = getNameAndFiles(user);
-						response = createServerMessage(LOGIN_DETAILS,
-								nameandfile);
-						printf("after response dir_path = %s\n",
-								user->dir_path);
+						response = createServerMessage(LOGIN_DETAILS,nameandfile);
 						status = 0;
 						i = numOfUsers;
-						printf("picked user");
 					}
 				}
 			}
@@ -249,11 +229,9 @@ int client_serving(int clientSocket, User **users, int numOfUsers) {
 	}
 	status = 0;
 	while (!status && user_msg->header.type != QUIT) {
-		printf("I'm in the while in client_serving \n");
 		receive_command(clientSocket, user_msg);
 		status = handleMessage(clientSocket, user_msg, user);
 	}
-	printf("I'm out of while in client_serving \n");
 	free(user_msg);
 	free(pass_msg);
 	return 0;
@@ -272,7 +250,6 @@ void sendGreetingMessage(int clientSocket) {
 void start_listen(User** usersArray, int numOfUsers, int port) {
 	int status, newsocketfd;
 	int socketfd = socket(PF_INET, SOCK_STREAM, 0);
-	printf("socketfd = %d\n", socketfd);
 	if (socketfd == -1) {
 		printf("%s\n", strerror(errno));
 		return;
@@ -287,15 +264,12 @@ void start_listen(User** usersArray, int numOfUsers, int port) {
 	my_addr.sin_port = htons(port);
 	my_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	my_addr.sin_family = AF_INET;
-	printf("Before bind\n");
 	status = bind(socketfd, (struct sockaddr *) &my_addr, sizeof(my_addr));
 	if (status < 0) {
 		printf("Bind error: %s\n", strerror(errno));
 		freeUsers(usersArray, numOfUsers);
 		return;
 	}
-	printf("Bind is done\n");
-
 	// MAX users is 1
 	status = listen(socketfd, 1);
 	if (status < 0) {
@@ -304,7 +278,6 @@ void start_listen(User** usersArray, int numOfUsers, int port) {
 		freeUsers(usersArray, numOfUsers);
 		return;
 	}
-	printf("Status now: %d \n", status);
 	// keep accepting users, one at a time
 	while (1) {
 		newsocketfd = accept(socketfd, (struct sockaddr *) &client_addr,
@@ -314,11 +287,8 @@ void start_listen(User** usersArray, int numOfUsers, int port) {
 			printf("%s\n", strerror(errno));
 			return;
 		}
-		printf("Accept done \n");
 		sendGreetingMessage(newsocketfd);
 		client_serving(newsocketfd, usersArray, numOfUsers);
-//		if (close(newsocketfd) == -1)
-//			printf("close() failed.\n");
 	}
 }
 
@@ -358,9 +328,6 @@ void start_server(char* users_file, const char* dir_path, int port) {
 			pass_buffer = (char*) malloc(sizeof(char*) * 26);
 			fileDirPath = (char*) malloc(strlen(dir_path) + 1);
 		}
-		//free(fileDirPath);
-		//free(user_buffer);
-		//free(pass_buffer);
 		start_listen(usersArray, numOfUsers, port);
 	}
 }

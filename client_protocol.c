@@ -29,12 +29,12 @@ void chopN(char* str, size_t n) {
 int defineUser(int scket) {
 	int status = 1;
 	Message* user_msg = (Message*) malloc(sizeof(Message));
+	user_msg->header.type = LOGIN_DETAILS;
 	if (!user_msg) {
 		printf("malloc failed\n");
 		fflush(NULL);
 		status = 0;
 	}
-
 	//get username and password
 	while (status && user_msg->header.type != QUIT) {
 		int userMaxLen = MAX_USERNAME_SIZE + strlen("User: ");
@@ -56,13 +56,10 @@ int defineUser(int scket) {
 			strncpy(passwordPrefix, fullPassword, 10);
 			passwordPrefix[10] = '\0';
 			int passFlag = strcmp(passwordPrefix, "Password: ");
-//			printf("%s\n%s\n", userPrefix, passwordPrefix); //DELETE THIS
 			if (strcmp(fullPassword, "quit\n") == 0) {
 				createQuitCommand(user_msg, scket);
 			} else if (passFlag || userFlag) {
 				printf("Wrong prefix of 'User:' or 'Password:' \n");
-//				printf("u = %d, p = %d", userFlag, passFlag); // DELETE THIS
-//			printf("user = %s\n", fullUsername); //DELETE THIS
 			} else {
 				status = send_command(scket, user_msg);
 				if (!status) {
@@ -148,7 +145,6 @@ int listOfFilesCommand(Message* m, char* commandStr, int mySocketfd) {
 }
 
 int deleteFileCommand(Message* m, char* file_name, int mySocket) {
-	printf("im in deleteFiles\n");
 	createMessageCommand(m, DELETE_FILE, file_name);
 	int status = send_command(mySocket, m);
 	if (status != 0) {
@@ -193,18 +189,17 @@ int addFileCommand(Message* m, char* path_to_file, char* file_name,
 		}
 		status = receive_command(mySocket, m);
 		if (status)
-			printf("error in receiving message\n");
+			printf("Error in receiving message\n");
 		else
 			printf("%s", m->arg1);
 	} else
-		printf("error, re-send message\n");
+		printf("Error, re-send message\n");
 	return 0;
 }
 
 int getFileCommand(Message* m, char* file_name, char* path_to_save,
 		int mySocket) {
 	//CHANGE ALL OF THIS
-	printf("im in get_file\n");
 	createMessageCommand(m, GET_FILE, file_name);
 	//char* path_to_save = (char*) malloc(strlen(m->arg2));
 	//strcpy(path_to_save, m->arg2);
@@ -217,14 +212,13 @@ int getFileCommand(Message* m, char* file_name, char* path_to_save,
 	status = receive_command(mySocket, m);
 	if (status == 0 && (m->header.type != ERROR)) {
 		if (getFileClientSide(path_to_save, m->arg1))
-			printf("file could not be opened\n");
+			printf("File could not be opened\n");
 	} else
-		printf("error in receiving message\n");
+		printf("Error in receiving message\n");
 	free(m);
 	return 0;
 }
 int sendClientCommand(char* commandStr, int mySocketfd) {
-	printf("in sendClientCommand\n");
 	Message* m = (Message*) malloc(sizeof(Message));
 	char* c = malloc(strlen(commandStr) + 5);
 	char delimit[] = " \t\r\n\v\f";
@@ -272,17 +266,12 @@ int sendClientCommand(char* commandStr, int mySocketfd) {
 		}
 		return 0;
 	} else if (strcmp(str1, "quit") == 0) {
-		printf("We got quit\n"); //TODO:delete
 		createQuitCommand(m, mySocketfd);
-//		if (close(mySocketfd) == -1) {
-//			printf("close() socket after quit failed\n");
-//			return 1;
-//		}
+		free(m);
 		return 1; //quiting
 	} else {
 		printf("Invalid command \n");
 	}
-	//printf("end\n");
 	return 0;
 }
 
@@ -298,7 +287,6 @@ int addFileClientSide(char* buffer, char* filePath) {
 }
 
 int getFileClientSide(char* filePath, char* fileBuffer) {
-	printf("fileBuffer, client-side: %s\n", fileBuffer);
 	FILE *file = fopen(filePath, "w");
 	if (!file) {
 		printf("File Not Opened\n");
@@ -306,7 +294,6 @@ int getFileClientSide(char* filePath, char* fileBuffer) {
 	}
 	fwrite(fileBuffer, sizeof(char), MAX_FILE_SIZE, file);
 	fclose(file);
-	printf("File Added Successfully");
 	return 0;
 }
 
@@ -314,10 +301,10 @@ int client_start(char* hostname, int port) {
 	if (hostname == NULL) {
 		char* hostname = (char*) malloc(sizeof(char) * 11);
 		strcpy(hostname, "localhost");
-//port = 1337;
+		//port = 1337;
 		port = 5566;
 	} else if (port == 0)
-//port = 1337;
+		//port = 1337;
 		port = 5566;
 
 	int status, serverSocket;
@@ -350,7 +337,6 @@ int client_start(char* hostname, int port) {
 		printf("status: %d\n", status);
 		fflush(NULL);
 	}
-	//char* inputStr;
 	char* inputStr;
 	while (status == 0) {
 		inputStr = (char*) malloc(
@@ -365,7 +351,6 @@ int client_start(char* hostname, int port) {
 		return 1;
 
 	}
-
 	return status;
 }
 
