@@ -201,10 +201,7 @@ int addFileCommand(Message* m, char* path_to_file, char* file_name,
 
 int getFileCommand(Message* m, char* file_name, char* path_to_save,
 		int mySocket) {
-	//CHANGE ALL OF THIS
 	createMessageCommand(m, GET_FILE, file_name);
-	//char* path_to_save = (char*) malloc(strlen(m->arg2));
-	//strcpy(path_to_save, m->arg2);
 	int status = send_command(mySocket, m);
 	if (status != 0) {
 		printf("error, re-send message\n");
@@ -213,7 +210,10 @@ int getFileCommand(Message* m, char* file_name, char* path_to_save,
 	}
 	status = receive_command(mySocket, m);
 	if (status == 0 && (m->header.type != ERROR)) {
-		if (getFileClientSide(path_to_save, m->arg1))
+		char* pathToFile = (char*) calloc(sizeof(char),(strlen(path_to_save)+strlen(file_name)));
+		strcpy(pathToFile, path_to_save);
+		strcpy(pathToFile + strlen(path_to_save), file_name);
+		if (getFileClientSide(pathToFile, m->arg1))
 			printf("File could not be opened\n");
 	} else
 		printf("Error in receiving message\n");
@@ -299,6 +299,7 @@ int addFileClientSide(char* buffer, char* filePath) {
 }
 
 int getFileClientSide(char* filePath, char* fileBuffer) {
+	//printf("File path: %s\n", filePath);
 	FILE *file = fopen(filePath, "w");
 	if (!file) {
 		printf("File Not Opened\n");
