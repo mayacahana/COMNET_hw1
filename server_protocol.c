@@ -164,7 +164,6 @@ int handleMessage(int clientSocket, Message *msg, User* user) {
 }
 
 char* getNameAndFiles(User* user) {
-	printf("Im in getName\n");
 	if (!user) {
 		return NULL;
 	}
@@ -173,7 +172,6 @@ char* getNameAndFiles(User* user) {
 	struct dirent* dir;
 	if (d) {
 		while ((dir = readdir(d)) != NULL) {
-			printf("In getNameandfiles: %s \n", dir->d_name);
 			numOfFiles++;
 		}
 		closedir(d);
@@ -194,7 +192,6 @@ char* getNameAndFiles(User* user) {
  */
 
 int client_serving(int clientSocket, User **users, int numOfUsers) {
-	printf("Entered client serving\n");
 	User* user = NULL;
 	Message *user_msg = (Message *) malloc(sizeof(Message));
 	Message *pass_msg = (Message*) malloc(sizeof(Message));
