@@ -42,23 +42,22 @@ typedef enum messageType{
 	ADD_FILE,
 	GET_FILE,
 	QUIT,
-	ERROR
+	ERROR,
+	INVALID_LINE,
+	GREETING,
 } MessageType;
 
 typedef struct Header_t{
 	short type;
 	short arg1len;
-	short arg2len;
 } MessageHeader;
 
 typedef struct Message_t{
 	MessageHeader header;
-	char* arg1;
-	char* arg2;
-	int fromClient;//1 - from client, 0 - from server
+	char arg1[MAX_PACKET_SIZE];
 } Message;
 
-int sendAll(int socket, void*buffer, int* len);
+void printMessageArg(Message* msg);
 
 int receiveAll(int socket, void* buffer, int* len);
 

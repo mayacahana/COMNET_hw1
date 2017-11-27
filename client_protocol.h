@@ -14,17 +14,18 @@
 
 void chopN(char* str, size_t n);
 int defineUser(int serverSocket);
-void createMessageCommand(Message* m, char* commandStr, MessageType type, char* prefix);
-int sendClientCommand(char* commandStr, int serverSocket, int mySocketfd);
+void createMessageCommand(Message* m,  MessageType type, char* prefix);
+void createQuitCommand(Message* m);
+int sendClientCommand(char* commandStr, int mySocketfd);
 char* addFileClientSide(char* filePath);
 void getFileClientSide(char* filePath, char* fileBuffer);
 int  client_start(char* hostname, int port);
-int listOfFilesCommand(Message* m, char* commandStr, char* inputPrefix, int serverSocket, int mySocketfd);
+int listOfFilesCommand(Message* m, char* commandStr,  int mySocketfd);
 int deleteFileCommand(Message* m, char* commandStr, char* inputPrefix,
-		int serverSocket, int mySocket);
-int addFileCommand(Message* m, char* commandStr, char* inputPrefix, int serverSocket,
+		 int mySocket);
+int addFileCommand(Message* m, char* commandStr, char* inputPrefix,
 		int mySocket);
-int getFileCommand(Message* m, char* commandStr, char* inputPrefix, int serverSocket,
+int getFileCommand(Message* m, char* commandStr, char* inputPrefix,
 		int mySocket) ;
 
 

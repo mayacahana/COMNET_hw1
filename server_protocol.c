@@ -7,18 +7,10 @@
 
 #include "server_protocol.h"
 
-Message* createServerMessage(MessageType type, char* arg1, char* arg2) {
+Message* createServerMessage(MessageType type, char* arg1) {
 	Message* msg = (Message*) malloc(sizeof(Message));
-	msg->fromClient = 0;
-	msg->arg1 = arg1;
-	msg->header.arg1len = strlen(arg1);
-	if (arg2 != NULL){
-		msg->arg2 = arg2;
-		msg->header.arg2len = strlen(arg2);
-	}
-	else{
-		msg->header.arg2len = 0;
-	}
+	strcpy(msg->arg1,arg1);
+	msg->header.arg1len = strlen(arg1)+1;
 	msg->header.type = type;
 	return msg;
 }
@@ -43,14 +35,14 @@ void addFile(int clientSocket, Message* msg, User* user) {
 	Message* msgToSend;
 	if (file == NULL) {
 		printf("File Not Added\n");
-		msgToSend = createServerMessage(msg->header.type, "ERROR", NULL);
+		msgToSend = createServerMessage(msg->header.type, "ERROR");
 		send_command(clientSocket, msgToSend);
 		free(msgToSend);
 		return;
 	}
-	fwrite(msg->arg2, sizeof(char), MAX_FILE_SIZE, file);
+	fwrite(msg->arg1, sizeof(char), MAX_FILE_SIZE, file);/////
 	fclose(file);
-	msg = createServerMessage(msg->header.type, "File added", NULL);
+	msg = createServerMessage(msg->header.type, "File added");
 	send_command(clientSocket, msg);
 	free(msg);
 
@@ -72,7 +64,7 @@ void deleteFile(int clientSocket, Message* msg, User* user) {
 	} else {
 		strcpy(arg, "No such file exists!");
 	}
-	Message* msgToSend = createServerMessage(DELETE_FILE, arg, NULL);
+	Message* msgToSend = createServerMessage(DELETE_FILE, arg);
 	send_command(clientSocket, msgToSend);
 	free(arg);
 	free(msgToSend);
@@ -82,7 +74,7 @@ void sendListOfFiles(int clientSocket, User* user) {
 	if (!user) {
 		return;
 	}
-	char files_names[MAX_FILES_PER_CLIENT * MAX_FILE_NAME];
+	char files_names[MAX_FILES_PER_CLIENT * MAX_FILE_NAME] = {'\0'};
 	char file_name[MAX_FILE_NAME];
 	DIR *d;
 	struct dirent *dir;
@@ -90,11 +82,14 @@ void sendListOfFiles(int clientSocket, User* user) {
 	if (d != NULL) {
 		while ((dir = readdir(d)) != NULL) {
 			sprintf(file_name, "%s\n", dir->d_name);
-			sprintf(files_names, "%s\n", file_name);
+			strcat(files_names, file_name);
 		}
 		closedir(d);
 	}
-	Message* msg = createServerMessage(LIST_OF_FILES, files_names, NULL);
+	else{
+		strcpy(files_names, "No Files in your directory\n");
+	}
+	Message* msg = createServerMessage(LIST_OF_FILES, files_names);
 	send_command(clientSocket, msg);
 	free(msg);
 	return;
@@ -120,40 +115,39 @@ void sendFileToClient(int clientSocket, Message* msg, User* user) {
 	fread(fileBuffer, MAX_FILE_SIZE, 1, fp);
 	fclose(fp);
 	//fileBuffer[fileBuffer] = '\0';
-	msg->arg1 = fileBuffer;
+	strcpy(msg->arg1,fileBuffer);
 	msg->header.arg1len = strlen(fileBuffer);
-	msg->fromClient = 0;
 	send_command(clientSocket, msg);
 	free(fileBuffer);
 	free(pathToFile);
 
 }
-void handleMessage(int clientSocket, Message *msg, User* user) {
+int handleMessage(int clientSocket, Message *msg, User* user) {
 	if (!msg) {
-		return;
+		return 1;
 	}
 	switch (msg->header.type) {
 	case LIST_OF_FILES:
 		sendListOfFiles(clientSocket, user);
-		return;
+		return 0;
 	case DELETE_FILE:
 		deleteFile(clientSocket, msg, user);
-		return;
+		return 0;
 	case ADD_FILE:
 		addFile(clientSocket, msg, user);
-		return;
+		return 0;
 	case GET_FILE:
 		sendFileToClient(clientSocket, msg, user);
-		return;
+		return 0;
 	default:
-		return;
+		return 1;
 	}
 }
 
-void getNameAndFiles(int clientSocket, User* user) {
+char* getNameAndFiles(User* user) {
 	printf("Im in getName\n");
 	if (!user) {
-		return;
+		return NULL;
 	}
 	int numOfFiles = 0;
 	DIR *d;
@@ -168,12 +162,7 @@ void getNameAndFiles(int clientSocket, User* user) {
 	char* arg = (char*) malloc(sizeof(char) * (MAX_USERNAME_SIZE + 30));
 	sprintf(arg, "Hi %s, you have %d files stored.\n", user->user_name,
 			numOfFiles);
-	Message* msg = createServerMessage(LOGIN_DETAILS, arg, NULL);
-	printf("arg1 = %s", msg->arg1);
-	send_command(clientSocket, msg);
-	free(arg);
-	free(msg);
-	return;
+	return arg;
 }
 
 /*
@@ -186,34 +175,60 @@ void getNameAndFiles(int clientSocket, User* user) {
 int client_serving(int clientSocket, User *users, int numOfUsers) {
 	printf("Entered client serving\n");
 	User* user = NULL;
-	Message *msg = (Message *) malloc(sizeof(Message) + 1);
+	Message *user_msg = (Message *) malloc(sizeof(Message));
+	Message *pass_msg = (Message*) malloc(sizeof(Message));
+	Message *response;
+	int status = 1;
 	printf("I'm now recieve command\n");
-	receive_command(clientSocket, msg);
-	printf("arg1 = %s", msg->arg1);
-	printf("arg2 = %s", msg->arg2);
-	if (msg->header.type == LOGIN_DETAILS) {
-		for (int i = 0; i < numOfUsers; i++) {
-			if (strcmp(users[i].user_name, msg->arg1) == 0) {
-				if (strcmp(users[i].password, msg->arg2) == 0) {
-					user = &users[i];
-					getNameAndFiles(clientSocket, user);
+	while(status){
+		receive_command(clientSocket, user_msg);
+		if (user_msg->header.type != QUIT){
+			receive_command(clientSocket, pass_msg);
+			for (int i = 0; i < numOfUsers; i++) {
+				if (strcmp(users[i].user_name, user_msg->arg1) == 0) {
+					if(strcmp(users[i].password, pass_msg->arg1)==0){
+						user = &users[i];
+						char* nameandfile = getNameAndFiles(user);
+						response = createServerMessage(LOGIN_DETAILS, nameandfile);
+						status = 0;
+						i = numOfUsers;
+						printf("picked user");
+					}
 				}
 			}
-		}
 		if (user == NULL) {
-			char* command = "WRONG";
-			msg->arg1 = command;
-			msg->header.arg1len = strlen(command);
-			send_command(clientSocket, msg);
-
+			response = createServerMessage(INVALID_LINE, "00");
+		}
+		printf("before send command");
+		send_command(clientSocket,response);
+		}
+		else{
+			free(user_msg);
+			free(pass_msg);
+			return 0;
 		}
 	}
-	while (msg->header.type != QUIT) {
-		receive_command(clientSocket, msg);
-		handleMessage(clientSocket, msg, user);
+	status = 1;
+	while(status && user_msg->header.type != QUIT){
+		receive_command(clientSocket, user_msg);
+		status = handleMessage(clientSocket, user_msg, user);
 	}
+	free(user_msg);
+	free(pass_msg);
 	return 0;
 }
+
+
+
+void sendGreetingMessage(int clientSocket){
+	Message* greeting = createServerMessage(GREETING, "Welcome! Please log in.\n");
+	int status = send_command(clientSocket, greeting);
+	if (status){
+		printf("Error in greeting\n");
+	}
+	free(greeting);
+}
+
 
 void start_listen(User *usersArray, int numOfUsers, int port) {
 	int status, newsocketfd;
@@ -261,6 +276,7 @@ void start_listen(User *usersArray, int numOfUsers, int port) {
 			return;
 		}
 		printf("Accept done \n");
+		sendGreetingMessage(newsocketfd);
 		client_serving(newsocketfd, usersArray, numOfUsers);
 		close(newsocketfd);
 	}
