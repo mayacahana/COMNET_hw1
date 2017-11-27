@@ -46,49 +46,45 @@ int defineUser(int scket) {
 		userPrefix[6] = '\0';
 		int userFlag = strcmp(userPrefix, "User: ");
 		chopN(fullUsername, strlen("User: "));
-		fullUsername[strlen(fullUsername)-1] = '\0';
-		if (strcmp(fullUsername, "quit\n") != 0) {
-				createMessageCommand(user_msg, LOGIN_DETAILS, fullUsername);
-				char* fullPassword = (char*) malloc(sizeof(char) * (passMaxLen));
-				fgets(fullPassword, userMaxLen, stdin);
-				char passwordPrefix[10];
-				strncpy(passwordPrefix, fullPassword, 10);
-				passwordPrefix[10] = '\0';
-				int passFlag = strcmp(passwordPrefix, "Password: ");
-				printf("%s\n%s\n", userPrefix, passwordPrefix);
-				if (strcmp(fullPassword, "quit\n") == 0) {
-						createQuitCommand(user_msg);
-				}
-				else if(passFlag || userFlag){
-					printf("Wrong prefix of 'User:' or 'Password:'");
-					printf("u = %d, p = %d", userFlag, passFlag);
-					printf("user = %s\n", fullUsername);
-				}
-				else{
-					status = send_command(scket, user_msg);
-					if (!status){
-						Message* pass_msg = (Message*) malloc(sizeof(Message));
-						chopN(fullPassword, strlen("Password: "));
-						fullPassword[strlen(fullPassword)-1] = '\0';
-						createMessageCommand(pass_msg, LOGIN_DETAILS, fullPassword);
-						status = send_command(scket, pass_msg);
-						receive_command(scket, pass_msg);
-						if (pass_msg->header.type == INVALID_LINE){
-							status = 1;
-						}
-						else{
-							status = 0;
-							printMessageArg(pass_msg);
-						}
-						free(pass_msg);
-					}
-					else{
-						printf("Error in sending user name\n");
-					}
+		fullUsername[strlen(fullUsername) - 1] = '\0';
 
+		if (strcmp(fullUsername, "quit\n") != 0) {
+			createMessageCommand(user_msg, LOGIN_DETAILS, fullUsername);
+			char* fullPassword = (char*) malloc(sizeof(char) * (passMaxLen));
+			fgets(fullPassword, userMaxLen, stdin);
+			char passwordPrefix[10];
+			strncpy(passwordPrefix, fullPassword, 10);
+			passwordPrefix[10] = '\0';
+			int passFlag = strcmp(passwordPrefix, "Password: ");
+			printf("%s\n%s\n", userPrefix, passwordPrefix); //DELETE THIS
+			if (strcmp(fullPassword, "quit\n") == 0) {
+				createQuitCommand(user_msg);
+			} else if (passFlag || userFlag) {
+				printf("Wrong prefix of 'User:' or 'Password:'");
+				printf("u = %d, p = %d", userFlag, passFlag); // DELETE THIS
+				printf("user = %s\n", fullUsername); //DELETE THIS
+			} else {
+				status = send_command(scket, user_msg);
+				if (!status) {
+					Message* pass_msg = (Message*) malloc(sizeof(Message));
+					chopN(fullPassword, strlen("Password: "));
+					fullPassword[strlen(fullPassword) - 1] = '\0';
+					createMessageCommand(pass_msg, LOGIN_DETAILS, fullPassword);
+					status = send_command(scket, pass_msg);
+					receive_command(scket, pass_msg);
+					if (pass_msg->header.type == INVALID_LINE) {
+						status = 1;
+					} else {
+						status = 0;
+						printMessageArg(pass_msg);
+					}
+					free(pass_msg);
+				} else {
+					printf("Error in sending user name\n");
 				}
-		}
-		else{
+
+			}
+		} else {
 			createQuitCommand(user_msg);
 			send_command(scket, user_msg);
 			status = 1;
@@ -98,23 +94,41 @@ int defineUser(int scket) {
 	return status;
 }
 
-void createMessageCommand(Message* m, MessageType type,
-		char* prefix) {
+/*
+ * @param Message* m, MessageType type, char* string
+ * receives the message type and string, and assigns them to the
+ * relevant field in the message struct.
+ */
+void createMessageCommand(Message* m, MessageType type, char* string) {
 	if (m == NULL )
 		return;
 	m->header.type = type;
-	strcpy(m->arg1,prefix);
-	m->header.arg1len = strlen(prefix)+1;
+	if (string == NULL ) {
+		m->arg1 = NULL;
+		return;
+	}
+	strcpy(m->arg1, string);
+	m->header.arg1len = strlen(string) + 1;
 	//chopN(commandStr, strlen(prefix));
 	return;
 }
 
-void createQuitCommand(Message* m){
+/*
+ * @param Message *m
+ * creates Message struct via createMessageCommand;
+ */
+void createQuitCommand(Message* m) {
 	createMessageCommand(m, QUIT, "00");
 }
 
+/*
+ * @param Message* m, char* commandStr, int mySocketfd
+ * creates Message struct vie createMessageCommand;
+ * sends the Message we created to server. If succeeds reveives message from server
+ * if send did not succeed, print message to user and exits.
+ */
 int listOfFilesCommand(Message* m, char* commandStr, int mySocketfd) {
-	printf("im in list_of_files\n");
+	printf("im in list_of_files\n"); //delete this
 	createMessageCommand(m, LIST_OF_FILES, "list");
 	int status = send_command(mySocketfd, m);
 	if (status != 0) {
@@ -131,56 +145,68 @@ int listOfFilesCommand(Message* m, char* commandStr, int mySocketfd) {
 	return status;
 }
 
-int deleteFileCommand(Message* m, char* commandStr, char* inputPrefix,
-		 int mySocket) {
-	printf("im in deleteFiles\n");
-	createMessageCommand(m, DELETE_FILE, inputPrefix);
+int deleteFileCommand(Message* m, char* commandStr, int mySocket) {
+	printf("im in deleteFiles\n"); //DELETE THIS
+	createMessageCommand(m, DELETE_FILE, commandStr);
 	int status = send_command(mySocket, m);
 	if (status != 0) {
 		printf("error, re-send message\n");
-		free(inputPrefix);
+		free(commandStr);
 		free(m);
-		return 0;
-	}
-	free(inputPrefix);
-	status = receive_command(mySocket, m);
-	if (status) {
-		printf("error in receiving message\n");
-	}
-	printf("%s", m->arg1);
-	free(inputPrefix);
-	free(m);
-	return 0;
-}
-
-int addFileCommand(Message* m, char* commandStr, char* inputPrefix,
-		 int mySocket) {
-	printf("im in addFiles\n");
-	createMessageCommand(m, ADD_FILE, inputPrefix);
-	char* buffer = addFileClientSide(m->arg1);
-	if (buffer == NULL ) {
-		free(inputPrefix);
-		return 0;
-	}
-	//strcpy(m->arg1, m->arg2);
-	//m->arg2 = buffer;
-	int status = send_command(mySocket, m);
-	if (status != 0) {
-		printf("error, re-send message\n");
-		free(m);
-		free(inputPrefix);
 		return 0;
 	}
 	status = receive_command(mySocket, m);
 	if (status)
 		printf("error in receiving message\n");
-	printf("%s", m->arg1);
-	free(inputPrefix);
+	else
+		printf("%s", m->arg1);
+	free(commandStr);
 	free(m);
 	return 0;
 }
 
-int getFileCommand(Message* m, char* commandStr, char* inputPrefix, int mySocket) {
+int addFileCommand(Message* m, char* commandStr, int mySocket) {
+	printf("im in addFiles\n"); //DELETE THIS
+	createMessageCommand(m, ADD_FILE, commandStr);
+	int status = send_command(mySocket, m);
+	if (status == 0) {
+		char* buffer = (char*) malloc(MAX_FILE_SIZE);
+		if (!buffer) {
+			printf("malloc error\n");
+			free(m);
+			return 0;
+		}
+		char* filePath;
+		const char* s = " ";
+		/* get the first word of commandStr */
+		filePath = strtok(commandStr, s);
+		buffer = addFileClientSide(filePath); // buffer now has whole content of file
+		if (buffer == NULL ) {
+			free(commandStr);
+			free(m);
+			return 0;
+		}
+		Message* fileContent = (Message*) malloc(sizeof(Message*));
+		createMessageCommand(fileContent, FILE_CONTENT, buffer);
+		status = send_command(mySocket, m);
+		free(buffer);
+		if (status != 0) {
+			printf("error, re-send message\n");
+			free(m);
+			return 0;
+		}
+		status = receive_command(mySocket, m);
+		if (status)
+			printf("error in receiving message\n");
+		else
+			printf("%s", m->arg1);
+	} else
+		printf("error, re-send message\n");
+	free(m);
+	return 0;
+}
+
+int getFileCommand(Message* m, char* commandStr, int mySocket) {
 	printf("im in get_file\n");
 	createMessageCommand(m, GET_FILE, inputPrefix);
 	//char* path_to_save = (char*) malloc(strlen(m->arg2));
@@ -189,18 +215,19 @@ int getFileCommand(Message* m, char* commandStr, char* inputPrefix, int mySocket
 	if (status != 0) {
 		printf("error, re-send message\n");
 		free(m);
-		free(inputPrefix);
 		return 0;
 	}
 	status = receive_command(mySocket, m);
-	if (status && (m->header.type != ERROR)){}
-	//	getFileClientSide(path_to_save, m->arg1);
-	else {
+	if (status == 0 && (m->header.type != ERROR)) {
+		char* filePath;
+		const char* s = " ";
+		/* get the second word of commandStr */
+		strtok(commandStr, s);
+		filePath = strtok(commandStr, s);
+		getFileClientSide(filePath, m->arg1);
+	} else
 		printf("error in receiving message\n");
-		free(inputPrefix);
-		free(m);
-		return 0;
-	}
+	free(m);
 	return 0;
 }
 
@@ -213,63 +240,48 @@ int sendClientCommand(char* commandStr, int mySocketfd) {
 	inputPrefix[strlen("list_of_files")] = '\0';
 	Message* m = (Message*) malloc(sizeof(Message));
 
-	printf("inputPrefix: %s\n", inputPrefix);//DELETE THIS
+	printf("inputPrefix: %s\n", inputPrefix);	//DELETE THIS
 
 	if (strcmp(inputPrefix, "list_of_files") == 0) {
-		free(inputPrefix);
 		return listOfFilesCommand(m, commandStr, mySocketfd);
 	}
-	printf("salami deleteFile\n");
 	inputPrefix[11] = '\0';
 	if (strcmp(inputPrefix, "delete_file\n") == 0) {
 		printf("salami2\n");
-		return deleteFileCommand(m, commandStr, inputPrefix,
-				mySocketfd);
+		return deleteFileCommand(m, commandStr, mySocketfd);
 	}
-	printf("salami addfile\n");
 	inputPrefix[8] = '\0';
 	if (strcmp(inputPrefix, "add_file\n") == 0) {
-		return addFileCommand(m, commandStr, inputPrefix,
-				mySocketfd);
+		return addFileCommand(m, commandStr, mySocketfd);
 	}
 
-	printf("salami getFile\n");
 	if (strcmp(inputPrefix, "get_file\n") == 0) {
-		return getFileCommand(m, commandStr, inputPrefix,
-				mySocketfd);
+		return getFileCommand(m, commandStr, mySocketfd);
 	}
-printf("salami quit\n");
 	inputPrefix[4] = '\0';
 	if (strcmp(inputPrefix, "quit") == 0) {
-		printf("we got quit\n");
-		if (close(mySocketfd) == -1) {
-			printf("close() failed\n");
-			free(inputPrefix);
-		}
-
-		free(m);
-		free(inputPrefix);
-		return 1;
+		createQuitCommand(m);
+	}
+	free(m);
+	return 1;
 	}
 	printf("end\n");
 	free(m);
-	free(inputPrefix);
 	return 0;
 }
 
-char* addFileClientSide(char* filePath) {
+void addFileClientSide(char* buffer, char* filePath) {
 	FILE* fp = fopen(filePath, "r");
-	char* buffer = (char*) malloc(MAX_FILE_SIZE);
-	if (!buffer) {
-		printf("malloc error\n");
-		return NULL ;
-	}
 	fread(buffer, MAX_FILE_SIZE, 1, fp);
 	fclose(fp);
-	return buffer;
+	return;
 }
 
 void getFileClientSide(char* filePath, char* fileBuffer) {
+	if (filePath == NULL){
+		printf("no filePath received\n");
+		return;
+	}
 	FILE *file = fopen(filePath, "w");
 	if (file == NULL ) {
 		printf("File Not Opened\n");
@@ -311,22 +323,18 @@ int client_start(char* hostname, int port) {
 		printf("Connection failed \n");
 		return 1;
 	}
-	fflush(NULL );
-	Message* msg = (Message*) calloc(sizeof(Message),1);
+	Message* msg = (Message*) calloc(sizeof(Message), 1);
 	status = receive_command(socketfd, msg);
-	if (status){
+	if (status) {
 		printf("problem in greeting\n");
-	}
-	else{
+	} else {
 		printMessageArg(msg);
 		status = defineUser(socketfd);
-		printf("status: %d\n", status);
-		fflush(NULL );
 	}
 	char* inputStr;
 	while (status == 0) {
 		inputStr = (char*) malloc(sizeof(char) * (MAX_COMMAND_NAME + 1));
-		fgets(inputStr, MAX_COMMAND_NAME + 1, stdin);
+		fgets(inputStr, MAX_COMMAND_NAME + 2 + 2 * MAX_ARG_LEN, stdin);
 		status = sendClientCommand(inputStr, socketfd);
 		free(inputStr);
 	}

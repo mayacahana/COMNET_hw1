@@ -17,16 +17,13 @@ int defineUser(int serverSocket);
 void createMessageCommand(Message* m,  MessageType type, char* prefix);
 void createQuitCommand(Message* m);
 int sendClientCommand(char* commandStr, int mySocketfd);
-char* addFileClientSide(char* filePath);
+void addFileClientSide(char* filePath);
 void getFileClientSide(char* filePath, char* fileBuffer);
 int  client_start(char* hostname, int port);
 int listOfFilesCommand(Message* m, char* commandStr,  int mySocketfd);
-int deleteFileCommand(Message* m, char* commandStr, char* inputPrefix,
-		 int mySocket);
-int addFileCommand(Message* m, char* commandStr, char* inputPrefix,
-		int mySocket);
-int getFileCommand(Message* m, char* commandStr, char* inputPrefix,
-		int mySocket) ;
+int deleteFileCommand(Message* m, char* commandStr, int mySocket);
+int addFileCommand(Message* m, char* commandStr, int mySocket);
+int getFileCommand(Message* m, char* commandStr, int mySocket) ;
 
 
 
