@@ -23,7 +23,7 @@ void freeUsers(User* usersArray, int numOfUsers) {
 }
 
 void addFile(int clientSocket, Message* msg, User* user) {
-	if (!user || !msg) {
+	if (!user || !msg){
 		printf("Error in Message or User");
 		return;
 	}
@@ -35,15 +35,19 @@ void addFile(int clientSocket, Message* msg, User* user) {
 	Message* msgToSend;
 	if (file == NULL) {
 		printf("File Not Added\n");
-		msgToSend = createServerMessage(msg->header.type, "ERROR");
+		msgToSend = createServerMessage(ERROR, "couldn't open file in server side\n");
 		send_command(clientSocket, msgToSend);
 		free(msgToSend);
 		return;
 	}
+	int status = receive_command(clientSocket, msg);
+	if (!status){
+		printf("Couldn't recieveBuffer\n");
+	}
 	fwrite(msg->arg1, sizeof(char), MAX_FILE_SIZE, file);/////
 	fclose(file);
-	msg = createServerMessage(msg->header.type, "File added");
-	send_command(clientSocket, msg);
+	msgToSend = createServerMessage(msg->header.type, "File added\n");
+	send_command(clientSocket, msgToSend);
 	free(msg);
 
 }
