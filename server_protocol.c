@@ -45,8 +45,8 @@ void addFile(int clientSocket, Message* msg, User* user) {
 		return;
 	}
 	int status = receive_command(clientSocket, msg);
-	if (!status) {
-		printf("Couldn't recieve Buffer\n");
+	if (status) {
+		printf("Couldn't recve Buffer\n");
 	}
 	fwrite(msg->arg1, sizeof(char), MAX_FILE_SIZE, file); /////
 	fclose(file);
@@ -120,25 +120,37 @@ void sendFileToClient(int clientSocket, Message* msg, User* user) {
 //	char * username = user->user_name;
 	FILE* fp;
 	char pathToFile[strlen(user->dir_path) + strlen(msg->arg1) + 1];
-	sprintf(pathToFile, "%s/%s/%s", user->dir_path, user->user_name, msg->arg1);
+	sprintf(pathToFile, "%s/%s", user->dir_path, msg->arg1);
 	puts(pathToFile);
-	fp = fopen(pathToFile, "rb");
+	fp = fopen(pathToFile, "r");
 	if (fp == NULL) {
 		printf("Can't open the file to send");
-		free(pathToFile);
+		fflush(NULL);
 		return;
 	}
+	printf("before read\n");
+	fflush(NULL);
 	//read the file into a buffer
-	char * fileBuffer = malloc(MAX_FILE_SIZE + 1);
+	char* fileBuffer = (char*) malloc(sizeof(char) * MAX_FILE_SIZE + 1);
+	if (!fileBuffer){
+		printf("no buffer\n");
+		fflush(NULL);
+		return;
+	}
 	fread(fileBuffer, MAX_FILE_SIZE, 1, fp);
+	printf("file buffer: %s\n", fileBuffer);
+	fflush(NULL);
 	fclose(fp);
+	printf("fclose\n");
+	fflush(NULL);
 	//fileBuffer[fileBuffer] = '\0';
 	strcpy(msg->arg1, fileBuffer);
+	printf("strcpy\n");
+	fflush(NULL);
 	msg->header.arg1len = strlen(fileBuffer);
 	send_command(clientSocket, msg);
 	free(fileBuffer);
-	free(pathToFile);
-
+	printf("free\n");
 }
 int handleMessage(int clientSocket, Message *msg, User* user) {
 	if (!msg) {
@@ -304,7 +316,8 @@ void start_listen(User** usersArray, int numOfUsers, int port) {
 		printf("Accept done \n");
 		sendGreetingMessage(newsocketfd);
 		client_serving(newsocketfd, usersArray, numOfUsers);
-		close(newsocketfd);
+//		if (close(newsocketfd) == -1)
+//			printf("close() failed.\n");
 	}
 }
 

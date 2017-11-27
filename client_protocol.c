@@ -56,13 +56,13 @@ int defineUser(int scket) {
 			strncpy(passwordPrefix, fullPassword, 10);
 			passwordPrefix[10] = '\0';
 			int passFlag = strcmp(passwordPrefix, "Password: ");
-			printf("%s\n%s\n", userPrefix, passwordPrefix); //DELETE THIS
+//			printf("%s\n%s\n", userPrefix, passwordPrefix); //DELETE THIS
 			if (strcmp(fullPassword, "quit\n") == 0) {
 				createQuitCommand(user_msg, scket);
 			} else if (passFlag || userFlag) {
 				printf("Wrong prefix of 'User:' or 'Password:'");
-				printf("u = %d, p = %d", userFlag, passFlag); // DELETE THIS
-				printf("user = %s\n", fullUsername); //DELETE THIS
+//				printf("u = %d, p = %d", userFlag, passFlag); // DELETE THIS
+//			printf("user = %s\n", fullUsername); //DELETE THIS
 			} else {
 				status = send_command(scket, user_msg);
 				if (!status) {
@@ -167,15 +167,16 @@ int deleteFileCommand(Message* m, char* file_name, int mySocket) {
 
 int addFileCommand(Message* m, char* path_to_file, char* file_name,
 		int mySocket) {
-	createMessageCommand(m, ADD_FILE,file_name);
+	createMessageCommand(m, ADD_FILE, file_name);
 	int status = send_command(mySocket, m);
 	if (status == 0) {
-		char* buffer = (char*) calloc(MAX_FILE_SIZE,1);
+		char* buffer = (char*) calloc(MAX_FILE_SIZE, 1);
 		if (!buffer) {
 			printf("calloc error\n");
 			return 0;
 		}
-		addFileClientSide(buffer, path_to_file); // buffer now has whole content of file
+		status = addFileClientSide(buffer, path_to_file); // buffer now has whole content of file
+
 		if (buffer == NULL) {
 			printf("maybe empty file. Not sent\n");
 			free(path_to_file);
@@ -215,12 +216,8 @@ int getFileCommand(Message* m, char* file_name, char* path_to_save,
 	}
 	status = receive_command(mySocket, m);
 	if (status == 0 && (m->header.type != ERROR)) {
-		char* filePath;
-		const char* s = " ";
-		/* get the second word of commandStr */
-		strtok(file_name, s);
-		filePath = strtok(file_name, s);
-		getFileClientSide(filePath, m->arg1);
+		if (getFileClientSide(path_to_save, m->arg1))
+			printf("file could not be opened\n");
 	} else
 		printf("error in receiving message\n");
 	free(m);
@@ -277,11 +274,11 @@ int sendClientCommand(char* commandStr, int mySocketfd) {
 	} else if (strcmp(str1, "quit") == 0) {
 		printf("We got quit\n"); //TODO:delete
 		createQuitCommand(m, mySocketfd);
-		if (close(mySocketfd) == -1) {
-			printf("close() socket after quit failed\n");
-			return 1;
-		}
-		return 0;
+//		if (close(mySocketfd) == -1) {
+//			printf("close() socket after quit failed\n");
+//			return 1;
+//		}
+		return 1; //quiting
 	} else {
 		printf("Invalid command \n");
 	}
@@ -289,31 +286,28 @@ int sendClientCommand(char* commandStr, int mySocketfd) {
 	return 0;
 }
 
-void addFileClientSide(char* buffer, char* filePath) {
+int addFileClientSide(char* buffer, char* filePath) {
 	FILE* fp = fopen(filePath, "r");
 	if (!fp) {
-		printf("File cannot be openes \n");
-		return;
+		printf("File cannot be opened \n");
+		return 1;
 	}
 	fread(buffer, MAX_FILE_SIZE, 1, fp);
 	fclose(fp);
-	return;
+	return 0;
 }
 
-void getFileClientSide(char* filePath, char* fileBuffer) {
-	if (filePath == NULL) {
-		printf("no filePath received\n");
-		return;
-	}
+int getFileClientSide(char* filePath, char* fileBuffer) {
+	printf("fileBuffer, client-side: %s\n", fileBuffer);
 	FILE *file = fopen(filePath, "w");
 	if (!file) {
 		printf("File Not Opened\n");
-		return;
+		return 1;
 	}
 	fwrite(fileBuffer, sizeof(char), MAX_FILE_SIZE, file);
 	fclose(file);
 	printf("File Added Successfully");
-	return;
+	return 0;
 }
 
 int client_start(char* hostname, int port) {
