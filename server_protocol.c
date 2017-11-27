@@ -9,8 +9,8 @@
 
 Message* createServerMessage(MessageType type, char* arg1) {
 	Message* msg = (Message*) malloc(sizeof(Message));
-	strcpy(msg->arg1,arg1);
-	msg->header.arg1len = strlen(arg1)+1;
+	strcpy(msg->arg1, arg1);
+	msg->header.arg1len = strlen(arg1) + 1;
 	msg->header.type = type;
 	return msg;
 }
@@ -23,30 +23,32 @@ void freeUsers(User** usersArray, int numOfUsers) {
 }
 
 void addFile(int clientSocket, Message* msg, User* user) {
-	if (!user || !msg){
+	if (!user || !msg) {
 		printf("Error in Message or User");
 		return;
 	}
 	printf("arg = %s\n dir_path = %s\n", msg->arg1, user->dir_path);
-	char* pathToFile = (char*) malloc (sizeof(char)*(strlen(user->dir_path)+strlen(msg->arg1)+1));
+	char* pathToFile = (char*) malloc(
+			sizeof(char) * (strlen(user->dir_path) + strlen(msg->arg1) + 1));
 	strcpy(pathToFile, user->dir_path);
 	pathToFile[strlen(user->dir_path)] = '/';
-	strcpy(pathToFile + strlen(user->dir_path)+1, msg->arg1);
+	strcpy(pathToFile + strlen(user->dir_path) + 1, msg->arg1);
 	printf("path = %s\n", pathToFile);
 	FILE *file = fopen(pathToFile, "w");
 	Message* msgToSend;
 	if (file == NULL) {
 		printf("File Not Added\n");
-		msgToSend = createServerMessage(ERROR, "couldn't open file in server side\n");
+		msgToSend = createServerMessage(ERROR,
+				"couldn't open file in server side\n");
 		send_command(clientSocket, msgToSend);
 		free(msgToSend);
 		return;
 	}
 	int status = receive_command(clientSocket, msg);
-	if (!status){
+	if (!status) {
 		printf("Couldn't recieveBuffer\n");
 	}
-	fwrite(msg->arg1, sizeof(char), MAX_FILE_SIZE, file);/////
+	fwrite(msg->arg1, sizeof(char), MAX_FILE_SIZE, file); /////
 	fclose(file);
 	msgToSend = createServerMessage(msg->header.type, "File added\n");
 	send_command(clientSocket, msgToSend);
@@ -80,21 +82,29 @@ void sendListOfFiles(int clientSocket, User* user) {
 	if (!user) {
 		return;
 	}
-	char files_names[MAX_FILES_PER_CLIENT * MAX_FILE_NAME] = {'\0'};
+	char files_names[MAX_FILES_PER_CLIENT * MAX_FILE_NAME] = { '\0' };
 	char file_name[MAX_FILE_NAME];
 	DIR *d;
 	struct dirent *dir;
+	int numOfFiles=0;
+	printf("In list of files the dir is: %s \n", user->dir_path);
 	d = opendir(user->dir_path);
 	if (d != NULL) {
 		while ((dir = readdir(d)) != NULL) {
-			sprintf(file_name, "%s\n", dir->d_name);
-			strcat(files_names, file_name);
+			printf("File name: %s \n", dir->d_name);
+			numOfFiles++;
+			if (strcmp(dir->d_name, ".") != 0 && strcmp(dir->d_name, "..") != 0){
+				sprintf(file_name, "%s\n", dir->d_name);
+				strcat(files_names, file_name);
+			}
+
 		}
 		closedir(d);
+	} else {
+		printf("Wrong dir path for user %s \n", user->user_name);
 	}
-	else{
+	if (numOfFiles <= 2)
 		strcpy(files_names, "No Files in your directory\n");
-	}
 	Message* msg = createServerMessage(LIST_OF_FILES, files_names);
 	send_command(clientSocket, msg);
 	free(msg);
@@ -121,7 +131,7 @@ void sendFileToClient(int clientSocket, Message* msg, User* user) {
 	fread(fileBuffer, MAX_FILE_SIZE, 1, fp);
 	fclose(fp);
 	//fileBuffer[fileBuffer] = '\0';
-	strcpy(msg->arg1,fileBuffer);
+	strcpy(msg->arg1, fileBuffer);
 	msg->header.arg1len = strlen(fileBuffer);
 	send_command(clientSocket, msg);
 	free(fileBuffer);
@@ -156,19 +166,23 @@ char* getNameAndFiles(User* user) {
 		return NULL;
 	}
 	int numOfFiles = 0;
-	DIR *d;
-	struct dirent *dir;
-	d = opendir(user->dir_path);
+	DIR *d = opendir(user->dir_path);
+	struct dirent* dir;
+	printf("USER: %s \n", user->user_name);
+	printf("DIRPATH of user: %s\n", user->dir_path);
 	if (d) {
 		while ((dir = readdir(d)) != NULL) {
+			printf("In getNameandfiles: %s \n", dir->d_name);
 			numOfFiles++;
 		}
 		closedir(d);
+	} else {
+		return NULL;
 	}
 	printf("before sprintf dir_path = %s\n", user->dir_path);
 	char* arg = (char*) malloc(sizeof(char) * (MAX_USERNAME_SIZE + 30));
 	sprintf(arg, "Hi %s, you have %d files stored.\n", user->user_name,
-			numOfFiles);
+			numOfFiles - 2);
 	printf("dir_path = %s\n", user->dir_path);
 	return arg;
 }
@@ -188,37 +202,38 @@ int client_serving(int clientSocket, User **users, int numOfUsers) {
 	Message *response;
 	int status = 1;
 	printf("I'm now recieve command\n");
-	while(status){
+	while (status) {
 		receive_command(clientSocket, user_msg);
-		if (user_msg->header.type != QUIT){
+		if (user_msg->header.type != QUIT) {
 			receive_command(clientSocket, pass_msg);
 			for (int i = 0; i < numOfUsers; i++) {
 				if (strcmp(users[i]->user_name, user_msg->arg1) == 0) {
-					if(strcmp(users[i]->password, pass_msg->arg1)==0){
+					if (strcmp(users[i]->password, pass_msg->arg1) == 0) {
 						user = users[i];
 						char* nameandfile = getNameAndFiles(user);
-						response = createServerMessage(LOGIN_DETAILS, nameandfile);
-						printf("after response dir_path = %s\n", user->dir_path);
+						response = createServerMessage(LOGIN_DETAILS,
+								nameandfile);
+						printf("after response dir_path = %s\n",
+								user->dir_path);
 						status = 0;
 						i = numOfUsers;
 						printf("picked user");
 					}
 				}
 			}
-		if (user == NULL) {
-			response = createServerMessage(INVALID_LINE, "00");
-		}
-		printf("before send command");
-		send_command(clientSocket,response);
-		}
-		else{
+			if (user == NULL) {
+				response = createServerMessage(INVALID_LINE, "00");
+			}
+			printf("before send command");
+			send_command(clientSocket, response);
+		} else {
 			free(user_msg);
 			free(pass_msg);
 			return 0;
 		}
 	}
 	status = 1;
-	while(status && user_msg->header.type != QUIT){
+	while (status && user_msg->header.type != QUIT) {
 		receive_command(clientSocket, user_msg);
 		status = handleMessage(clientSocket, user_msg, user);
 	}
@@ -227,17 +242,15 @@ int client_serving(int clientSocket, User **users, int numOfUsers) {
 	return 0;
 }
 
-
-
-void sendGreetingMessage(int clientSocket){
-	Message* greeting = createServerMessage(GREETING, "Welcome! Please log in.\n");
+void sendGreetingMessage(int clientSocket) {
+	Message* greeting = createServerMessage(GREETING,
+			"Welcome! Please log in.\n");
 	int status = send_command(clientSocket, greeting);
-	if (status){
+	if (status) {
 		printf("Error in greeting\n");
 	}
 	free(greeting);
 }
-
 
 void start_listen(User** usersArray, int numOfUsers, int port) {
 	int status, newsocketfd;
@@ -295,8 +308,8 @@ void start_server(char* users_file, const char* dir_path, int port) {
 	//creating the main folder
 	//reading input file
 	FILE* usersFile = fopen(users_file, "r");
-	if (!usersFile){
-		printf("The file: %s couldn't be opened \n",users_file);
+	if (!usersFile) {
+		printf("The file: %s couldn't be opened \n", users_file);
 		return;
 	}
 	User** usersArray = (User**) malloc(15 * sizeof(User));
@@ -310,7 +323,7 @@ void start_server(char* users_file, const char* dir_path, int port) {
 		while (fscanf(usersFile, "%s\t", user_buffer) > 0) {
 			strcpy(fileDirPath, dir_path);
 			fileDirPath[strlen(dir_path)] = '/';
-			strcpy(fileDirPath+strlen(dir_path)+1, user_buffer);
+			strcpy(fileDirPath + strlen(dir_path) + 1, user_buffer);
 			if (!mkdir(fileDirPath, ACCESSPERMS)) {
 				User* newUser = (User*) malloc(sizeof(User));
 				newUser->user_name = user_buffer;
