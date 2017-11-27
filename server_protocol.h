@@ -17,16 +17,16 @@ typedef struct user_t {
 } User;
 
 Message* createServerMessage(MessageType type, char* arg1);
-void freeUsers(User* usersArray, int numOfUsers);
+void freeUsers(User** usersArray, int numOfUsers);
 void addFile(int clientSocket, Message* msg, User* user);
 void deleteFile(int clientSocket, Message* msg, User* user);
 void sendListOfFiles(int clientSocket, User* user);
 void sendFileToClient(int clientSocket, Message* msg, User* user) ;
 int handleMessage(int clientSocket, Message* msg, User* user);
 char* getNameAndFiles(User* user);
-int client_serving(int clientSocket, User *users, int numOfUsers);
+int client_serving(int clientSocket, User** users, int numOfUsers);
 void sendGreetingMessage(int clientSocket);
-void start_listen(User *usersArray, int numOfUsers, int port);
+void start_listen(User** usersArray, int numOfUsers, int port);
 void start_server(char* users_file, const char* dir_path, int port);
 
 

@@ -15,9 +15,9 @@ Message* createServerMessage(MessageType type, char* arg1) {
 	return msg;
 }
 
-void freeUsers(User* usersArray, int numOfUsers) {
+void freeUsers(User** usersArray, int numOfUsers) {
 	for (int i = 0; i < numOfUsers; i++) {
-		free(&usersArray[i]);
+		free(usersArray[i]);
 	}
 	free(usersArray);
 }
@@ -27,11 +27,12 @@ void addFile(int clientSocket, Message* msg, User* user) {
 		printf("Error in Message or User");
 		return;
 	}
-	char pathToFile[strlen(user->dir_path) + strlen(msg->arg1) + 5];
+	printf("arg = %s\n dir_path = %s\n", msg->arg1, user->dir_path);
+	char* pathToFile = (char*) malloc (sizeof(char)*(strlen(user->dir_path)+strlen(msg->arg1)+1));
 	strcpy(pathToFile, user->dir_path);
-	strcat(pathToFile, "/");
-	strcat(pathToFile, msg->arg1);
-	printf("path = %\n", pathToFile);
+	pathToFile[strlen(user->dir_path)] = '/';
+	strcpy(pathToFile + strlen(user->dir_path)+1, msg->arg1);
+	printf("path = %s\n", pathToFile);
 	FILE *file = fopen(pathToFile, "w");
 	Message* msgToSend;
 	if (file == NULL) {
@@ -164,9 +165,11 @@ char* getNameAndFiles(User* user) {
 		}
 		closedir(d);
 	}
+	printf("before sprintf dir_path = %s\n", user->dir_path);
 	char* arg = (char*) malloc(sizeof(char) * (MAX_USERNAME_SIZE + 30));
 	sprintf(arg, "Hi %s, you have %d files stored.\n", user->user_name,
 			numOfFiles);
+	printf("dir_path = %s\n", user->dir_path);
 	return arg;
 }
 
@@ -177,7 +180,7 @@ char* getNameAndFiles(User* user) {
  *
  */
 
-int client_serving(int clientSocket, User *users, int numOfUsers) {
+int client_serving(int clientSocket, User **users, int numOfUsers) {
 	printf("Entered client serving\n");
 	User* user = NULL;
 	Message *user_msg = (Message *) malloc(sizeof(Message));
@@ -190,11 +193,12 @@ int client_serving(int clientSocket, User *users, int numOfUsers) {
 		if (user_msg->header.type != QUIT){
 			receive_command(clientSocket, pass_msg);
 			for (int i = 0; i < numOfUsers; i++) {
-				if (strcmp(users[i].user_name, user_msg->arg1) == 0) {
-					if(strcmp(users[i].password, pass_msg->arg1)==0){
-						user = &users[i];
+				if (strcmp(users[i]->user_name, user_msg->arg1) == 0) {
+					if(strcmp(users[i]->password, pass_msg->arg1)==0){
+						user = users[i];
 						char* nameandfile = getNameAndFiles(user);
 						response = createServerMessage(LOGIN_DETAILS, nameandfile);
+						printf("after response dir_path = %s\n", user->dir_path);
 						status = 0;
 						i = numOfUsers;
 						printf("picked user");
@@ -235,7 +239,7 @@ void sendGreetingMessage(int clientSocket){
 }
 
 
-void start_listen(User *usersArray, int numOfUsers, int port) {
+void start_listen(User** usersArray, int numOfUsers, int port) {
 	int status, newsocketfd;
 	int socketfd = socket(PF_INET, SOCK_STREAM, 0);
 	printf("socketfd = %d\n", socketfd);
@@ -295,7 +299,7 @@ void start_server(char* users_file, const char* dir_path, int port) {
 		printf("The file: %s couldn't be opened \n",users_file);
 		return;
 	}
-	User* usersArray = (User*) malloc(15 * sizeof(User));
+	User** usersArray = (User**) malloc(15 * sizeof(User));
 	memset(usersArray, 0, sizeof(User) * 15);
 	int numOfUsers = 0;
 
@@ -305,30 +309,27 @@ void start_server(char* users_file, const char* dir_path, int port) {
 		char* fileDirPath = (char*) malloc(strlen(dir_path) + 1);
 		while (fscanf(usersFile, "%s\t", user_buffer) > 0) {
 			strcpy(fileDirPath, dir_path);
-			strcat(fileDirPath, "/");
-			strcat(fileDirPath, user_buffer);
+			fileDirPath[strlen(dir_path)] = '/';
+			strcpy(fileDirPath+strlen(dir_path)+1, user_buffer);
 			if (!mkdir(fileDirPath, ACCESSPERMS)) {
 				User* newUser = (User*) malloc(sizeof(User));
 				newUser->user_name = user_buffer;
 				fscanf(usersFile, "%s\n", pass_buffer);
 				newUser->password = pass_buffer;
 				newUser->dir_path = fileDirPath;
-				usersArray[numOfUsers] = *newUser;
+				usersArray[numOfUsers] = newUser;
 				numOfUsers++;
-				free(newUser);
 			} else {
 				printf("Error: %s \n", strerror(errno));
 				printf("cannot create user directory for :%s\n", user_buffer);
 			}
-			user_buffer = (char*) malloc(
-					sizeof(char*) * MAX_USERNAME_SIZE + 1 + strlen("User :"));
-			pass_buffer = (char*) malloc(
-					sizeof(char*) * MAX_PASSWORD_SIZE + 1 + strlen("Password"));
-
+			user_buffer = (char*) malloc(sizeof(char*) * 26);
+			pass_buffer = (char*) malloc(sizeof(char*) * 26);
+			fileDirPath = (char*) malloc(strlen(dir_path) + 1);
 		}
-		free(fileDirPath);
-		free(user_buffer);
-		free(pass_buffer);
+		//free(fileDirPath);
+		//free(user_buffer);
+		//free(pass_buffer);
 		start_listen(usersArray, numOfUsers, port);
 	}
 }
