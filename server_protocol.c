@@ -65,6 +65,7 @@ void deleteFile(int clientSocket, Message* msg, User* user) {
 	strcpy(pathToFile, user->dir_path);
 	strcat(pathToFile, "/");
 	strcat(pathToFile, msg->arg1);
+	printf("in deleteFile server- pathtofile: %s\n",pathToFile);
 	int status = remove(pathToFile);
 	char* arg = (char*) malloc(sizeof(char) * 20);
 	if (status == 0) {
@@ -91,14 +92,13 @@ void sendListOfFiles(int clientSocket, User* user) {
 	d = opendir(user->dir_path);
 	if (d != NULL) {
 		while ((dir = readdir(d)) != NULL) {
-			printf("File name: %s \n", dir->d_name);
 			numOfFiles++;
 			if (strcmp(dir->d_name, ".") != 0 && strcmp(dir->d_name, "..") != 0){
 				sprintf(file_name, "%s\n", dir->d_name);
 				strcat(files_names, file_name);
 			}
-
 		}
+		printf("Out of the while in this \n");
 		closedir(d);
 	} else {
 		printf("Wrong dir path for user %s \n", user->user_name);
@@ -232,11 +232,13 @@ int client_serving(int clientSocket, User **users, int numOfUsers) {
 			return 0;
 		}
 	}
-	status = 1;
-	while (status && user_msg->header.type != QUIT) {
+	status = 0;
+	while (!status && user_msg->header.type != QUIT) {
+		printf("I'm in the while in client_serving \n");
 		receive_command(clientSocket, user_msg);
 		status = handleMessage(clientSocket, user_msg, user);
 	}
+	printf("I'm out of while in client_serving \n");
 	free(user_msg);
 	free(pass_msg);
 	return 0;
