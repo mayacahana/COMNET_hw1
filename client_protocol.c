@@ -246,7 +246,9 @@ int sendClientCommand(char* commandStr, int mySocketfd) {
 		char *str3 = strtok(NULL, delimit);
 		if (str3 != NULL) {
 			if (strcmp(str1, "add_file") == 0) {
-				return addFileCommand(m, str2, str3, mySocketfd);
+				if(addFileCommand(m, str2, str3, mySocketfd) == 1){
+					printf("Error in ad ")
+				}
 			} else if (strcmp(str1, "get_file") == 0) {
 				return getFileCommand(m, str2, str3, mySocketfd);
 			}
