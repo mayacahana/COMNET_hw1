@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 
-#define  DEF_PORT 5566
+#define  DEF_PORT 1337
 #include "server_protocol.h"
 
 int main(int argc, char* argv[]) {
