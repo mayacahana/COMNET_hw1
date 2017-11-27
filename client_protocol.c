@@ -167,28 +167,21 @@ int deleteFileCommand(Message* m, char* file_name, int mySocket) {
 
 int addFileCommand(Message* m, char* path_to_file, char* file_name,
 		int mySocket) {
-	// CHANGE ALL OF THIS
-	printf("im in addFiles\n"); //DELETE THIS
-	createMessageCommand(m, ADD_FILE, path_to_file);
+	createMessageCommand(m, ADD_FILE,file_name);
 	int status = send_command(mySocket, m);
 	if (status == 0) {
-		char* buffer = (char*) malloc(MAX_FILE_SIZE);
+		char* buffer = (char*) calloc(MAX_FILE_SIZE,1);
 		if (!buffer) {
-			printf("malloc error\n");
-			free(m);
+			printf("calloc error\n");
 			return 0;
 		}
-		char* filePath;
-		const char* s = " ";
-		/* get the first word of commandStr */
-		filePath = strtok(path_to_file, s);
-		addFileClientSide(buffer, filePath); // buffer now has whole content of file
+		addFileClientSide(buffer, path_to_file); // buffer now has whole content of file
 		if (buffer == NULL) {
+			printf("maybe empty file. Not sent\n");
 			free(path_to_file);
-			free(m);
 			return 0;
 		}
-		Message* fileContent = (Message*) malloc(sizeof(Message*));
+		Message* fileContent = (Message*) malloc(sizeof(Message));
 		createMessageCommand(fileContent, FILE_CONTENT, buffer);
 		status = send_command(mySocket, fileContent);
 		free(buffer);
@@ -204,7 +197,6 @@ int addFileCommand(Message* m, char* path_to_file, char* file_name,
 			printf("%s", m->arg1);
 	} else
 		printf("error, re-send message\n");
-	free(m);
 	return 0;
 }
 
@@ -354,7 +346,7 @@ int client_start(char* hostname, int port) {
 		printf("Connection failed \n");
 		return 1;
 	}
-	Message* msg = (Message*) calloc(sizeof(Message), 1);
+	Message* msg = (Message*) malloc(sizeof(Message));
 	status = receive_command(socketfd, msg);
 	if (status) {
 		printf("problem in greeting\n");
