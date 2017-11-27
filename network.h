@@ -28,6 +28,7 @@
 #define MAX_FILES_PER_CLIENT 15
 #define MAX_FILE_SIZE 512
 #define MAX_PATH_NAME 500
+#define MAX_ARG_LEN 500
 #define MAX_FILE_NAME 50
 #define MAX_COMMAND_NAME 15
 #define HEADER_SIZE (sizeof(MessageHeader))

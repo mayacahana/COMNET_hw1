@@ -117,10 +117,22 @@ void createMessageCommand(Message* m, MessageType type, char* string) {
  * @param Message *m
  * creates Message struct via createMessageCommand;
  */
-void createQuitCommand(Message* m) {
+int createQuitCommand(Message* m, int mySocketfd) {
 	createMessageCommand(m, QUIT, "00");
+	int status = send_command(mySocketfd, m);
+	if (status != 0){
+		printf("Error. re-send message %s\n", strerror(errno));
+		free(m);
+		return 1;
+	}
+	status = receive_command(mySocketfd,m);
+	if (status != 0){
+		printf("Error in receiving message %s\n", strerror(errno));
+	}
+	printMessageArg(m);
+	free(m);
+	return status;
 }
-
 /*
  * @param Message* m, char* commandStr, int mySocketfd
  * creates Message struct vie createMessageCommand;
@@ -230,43 +242,71 @@ int getFileCommand(Message* m, char* commandStr, int mySocket) {
 	free(m);
 	return 0;
 }
-
-int sendClientCommand(char* commandStr, int mySocketfd) {
-	printf("in sendClientCommand\n");
-	int status = 0;
-	char* inputPrefix = (char*) malloc(
-			sizeof(char) * (strlen("list_of_files") + 2));
-	strcpy(inputPrefix, commandStr);
-	inputPrefix[strlen("list_of_files")] = '\0';
-	Message* m = (Message*) malloc(sizeof(Message));
-
-	printf("inputPrefix: %s\n", inputPrefix);	//DELETE THIS
-
-	if (strcmp(inputPrefix, "list_of_files") == 0) {
-		return listOfFilesCommand(m, commandStr, mySocketfd);
+int sendClientCommand(char* commandStr, int sckt) {
+	char op[MAX_COMMAND_NAME], arg1[MAX_ARG_LEN], arg2[MAX_ARG_LEN];
+	while (1) {
+		Message* m = (Message*) malloc(sizeof(Message));
+		memset(op, 0, MAX_COMMAND_NAME);
+		memset(arg1, 0, MAX_ARG_LEN);
+		memset(arg2, 0, MAX_ARG_LEN);
+		//parsing
+		strcpy(op, strtok(commandStr, " "));
+		strcpy(arg1, strtok(NULL," "));
+		strcpy(arg2, strtok(NULL," "));
+		// checking op commands:
+		if (strcmp(op, "list_of_files") == 0) {
+			if (listOfFilesCommand(m, commandStr, sckt) == 1) {
+				printf("Error in getting list_of_files \n");
+				if (close(sckt) == -1)
+					printf("%s\n", strerror(errno));
+				return 1;
+			}
+		} else if (strcmp(op, "delete_file") == 0) {
+			if (arg1 == NULL) {
+				printf("Error in delete file. name of file not provided \n");
+			} else if (deleteFileCommand(m, commandStr, sckt) == 1) {
+				printf("Error in delete_file \n");
+				if (close(sckt) == -1)
+					printf("%s\n", strerror(errno));
+				return 1;
+			}
+		} else if (strcmp(op, "add_file") == 0) {
+			if (arg1 == NULL || arg2 == NULL) {
+				printf("Path to file and/or new file name not provided \n");
+			} else if (addFileCommand(m, commandStr, sckt) == 1) {
+				printf("Error in add_file \n");
+				if (close(sckt) == -1)
+					printf("%s \n", strerror(errno));
+				return 1;
+			}
+		} else if (strcmp(op, "get_file") == 0) {
+			if (arg1 == NULL || arg2 == NULL) {
+				printf("Path for save and/or file name not provided");
+			} else if (getFileCommand(m, commandStr, sckt) == 1) {
+				printf("Error in get_file\n");
+				if (close(sckt) == -1)
+					printf("%s\n",strerror(errno));
+				return 1;
+			}
+		} else if (strcmp(op, "quit") == 0) {
+			if (createQuitCommand(m, sckt) == 1 ){
+				printf("Error in quitting \n");
+				if (close(sckt) == -1)
+					printf("%s\n",strerror(errno));
+				return 1;
+			}
+			break;
+		}
+		printf("Invalid opcode \n");
+		free(m);
+		break;
 	}
-	inputPrefix[11] = '\0';
-	if (strcmp(inputPrefix, "delete_file\n") == 0) {
-		printf("salami2\n");
-		return deleteFileCommand(m, commandStr, mySocketfd);
-	}
-	inputPrefix[8] = '\0';
-	if (strcmp(inputPrefix, "add_file\n") == 0) {
-		return addFileCommand(m, commandStr, mySocketfd);
-	}
-
-	if (strcmp(inputPrefix, "get_file\n") == 0) {
-		return getFileCommand(m, commandStr, mySocketfd);
-	}
-	inputPrefix[4] = '\0';
-	if (strcmp(inputPrefix, "quit") == 0) {
-		createQuitCommand(m);
-	}
-	free(m);
-	return 1;
-	}
+	//close socket
 	printf("end\n");
-	free(m);
+	if(close(sckt) == -1){
+		printf("%s\n", strerror(errno));
+		return 1;
+	}
 	return 0;
 }
 
