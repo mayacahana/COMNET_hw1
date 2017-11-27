@@ -30,7 +30,7 @@ void addFile(int clientSocket, Message* msg, User* user) {
 		printf("Error in Message or User");
 		return;
 	}
-	char* pathToFile = (char*) malloc(sizeof(char)*(strlen(user->dir_path)+strlen(msg->arg1)+1));
+	char* pathToFile = (char*) calloc(sizeof(char),(strlen(user->dir_path)+strlen(msg->arg1)+1));
 	strcpy(pathToFile, user->dir_path);
 	pathToFile[strlen(user->dir_path)] = '/';
 	strcpy(pathToFile + strlen(user->dir_path) + 1, msg->arg1);
@@ -44,6 +44,7 @@ void addFile(int clientSocket, Message* msg, User* user) {
 		free(msgToSend);
 		return;
 	}
+	memset(msg->arg1, 0,MAX_FILE_SIZE);
 	int status = receive_command(clientSocket, msg);
 	if (status) {
 		printf("Couldn't recve Buffer\n");
