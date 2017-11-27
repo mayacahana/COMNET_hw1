@@ -61,7 +61,6 @@ int receiveAll(int socket, void* buffer, int* len) {
 
 int receive_command(int sckt, Message* msg_received) {
 	//recieve the Messageeader first
-	printf("I'm in network in receive com \n");
 	int len_header = sizeof(MessageHeader);
 	if (receiveAll(sckt, &msg_received->header, &len_header)) {
 		printf("%s\n", strerror(errno));
