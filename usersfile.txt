@@ -1,3 +1,0 @@
-first	1234
-second	1234
-third	1234
