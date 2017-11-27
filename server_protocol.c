@@ -17,6 +17,9 @@ Message* createServerMessage(MessageType type, char* arg1) {
 
 void freeUsers(User** usersArray, int numOfUsers) {
 	for (int i = 0; i < numOfUsers; i++) {
+		free(usersArray[i]->dir_path);
+		free(usersArray[i]->password);
+		free(usersArray[i]->user_name);
 		free(usersArray[i]);
 	}
 	free(usersArray);
