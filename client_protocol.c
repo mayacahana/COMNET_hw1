@@ -60,7 +60,7 @@ int defineUser(int scket) {
 			if (strcmp(fullPassword, "quit\n") == 0) {
 				createQuitCommand(user_msg, scket);
 			} else if (passFlag || userFlag) {
-				printf("Wrong prefix of 'User:' or 'Password:'");
+				printf("Wrong prefix of 'User:' or 'Password:' \n");
 //				printf("u = %d, p = %d", userFlag, passFlag); // DELETE THIS
 //			printf("user = %s\n", fullUsername); //DELETE THIS
 			} else {
@@ -74,6 +74,7 @@ int defineUser(int scket) {
 					receive_command(scket, pass_msg);
 					if (pass_msg->header.type == INVALID_LINE) {
 						status = 1;
+						printMessageArg(pass_msg);
 					} else {
 						status = 0;
 						printMessageArg(pass_msg);
@@ -252,7 +253,7 @@ int sendClientCommand(char* commandStr, int mySocketfd) {
 			} else {
 				printf("Error: Invalid command \n");
 				free(m);
-				return 1;
+				return 0;
 			}
 		}
 		if (strcmp(str1, "delete_file") == 0) {

@@ -8,7 +8,6 @@
 
 
 void printMessageArg(Message* msg){
-	int i = 0;
 //	while(msg->arg1[i] != '\n'){
 //		printf("%c", msg->arg1[i++]);
 //	}

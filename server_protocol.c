@@ -237,7 +237,7 @@ int client_serving(int clientSocket, User **users, int numOfUsers) {
 				}
 			}
 			if (user == NULL) {
-				response = createServerMessage(INVALID_LINE, "00");
+				response = createServerMessage(INVALID_LINE, "Wrong username or/and password. please try again\n");
 			}
 			printf("before send command");
 			send_command(clientSocket, response);
