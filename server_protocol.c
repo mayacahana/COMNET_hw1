@@ -27,13 +27,10 @@ void addFile(int clientSocket, Message* msg, User* user) {
 		printf("Error in Message or User");
 		return;
 	}
-	printf("arg = %s\n dir_path = %s\n", msg->arg1, user->dir_path);
-	char* pathToFile = (char*) malloc(
-			sizeof(char) * (strlen(user->dir_path) + strlen(msg->arg1) + 1));
+	char* pathToFile = (char*) malloc(sizeof(char)*(strlen(user->dir_path)+strlen(msg->arg1)+1));
 	strcpy(pathToFile, user->dir_path);
 	pathToFile[strlen(user->dir_path)] = '/';
 	strcpy(pathToFile + strlen(user->dir_path) + 1, msg->arg1);
-	printf("path = %s\n", pathToFile);
 	FILE *file = fopen(pathToFile, "w");
 	Message* msgToSend;
 	if (file == NULL) {
@@ -46,14 +43,16 @@ void addFile(int clientSocket, Message* msg, User* user) {
 	}
 	int status = receive_command(clientSocket, msg);
 	if (!status) {
-		printf("Couldn't recieveBuffer\n");
+		printf("Couldn't recieve Buffer\n");
 	}
 	fwrite(msg->arg1, sizeof(char), MAX_FILE_SIZE, file); /////
 	fclose(file);
 	msgToSend = createServerMessage(msg->header.type, "File added\n");
-	send_command(clientSocket, msgToSend);
-	free(msg);
-
+	status = send_command(clientSocket, msgToSend);
+	if (status){
+		printf("Could not send File added\n");
+	}
+	free(msgToSend);
 }
 
 void deleteFile(int clientSocket, Message* msg, User* user) {
@@ -69,9 +68,9 @@ void deleteFile(int clientSocket, Message* msg, User* user) {
 	int status = remove(pathToFile);
 	char* arg = (char*) malloc(sizeof(char) * 20);
 	if (status == 0) {
-		strcpy(arg, "File removed!");
+		strcpy(arg, "File removed!\n");
 	} else {
-		strcpy(arg, "No such file exists!");
+		strcpy(arg, "No such file exists!\n");
 	}
 	Message* msgToSend = createServerMessage(DELETE_FILE, arg);
 	send_command(clientSocket, msgToSend);
