@@ -11,7 +11,7 @@ void printMessageArg(Message* msg){
 //	while(msg->arg1[i] != '\n'){
 //		printf("%c", msg->arg1[i++]);
 //	}
-	printf(msg->arg1);
+	printf("%s",msg->arg1);
 	//printf("\n");
 	fflush(NULL);
 }

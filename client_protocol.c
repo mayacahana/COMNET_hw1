@@ -131,7 +131,6 @@ int createQuitCommand(Message* m, int mySocketfd) {
  * if send did not succeed, print message to user and exits.
  */
 int listOfFilesCommand(Message* m, char* commandStr, int mySocketfd) {
-	printf("im in list_of_files\n"); //delete this
 	createMessageCommand(m, LIST_OF_FILES, "list");
 	int status = send_command(mySocketfd, m);
 	if (status != 0) {
@@ -141,7 +140,7 @@ int listOfFilesCommand(Message* m, char* commandStr, int mySocketfd) {
 	}
 	status = receive_command(mySocketfd, m);
 	if (status) {
-		printf("error in receiving message\n");
+		printf("Error in receiving message %s\n", strerror(errno));
 	}
 	printMessageArg(m);
 	free(m);
