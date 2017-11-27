@@ -45,6 +45,7 @@ typedef enum messageType{
 	ERROR,
 	INVALID_LINE,
 	GREETING,
+	FILE_CONTENT
 } MessageType;
 
 typedef struct Header_t{
